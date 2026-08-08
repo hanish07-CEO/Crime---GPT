@@ -46,7 +46,7 @@ export default function WorkspaceHeader({ onReset, activeCaseTitle, onOpenSoluti
           <span>LAW ENFORCEMENT SENSITIVE (LES) // CJIS SECURITY POLICY v5.9 COMPLIANT</span>
         </div>
         <div className="hidden md:flex items-center gap-4 shrink-0 font-mono text-[9.5px]">
-          <span className="bg-slate-950 text-amber-400 px-2 py-0.5 rounded">JURISDICTION: METRO POLICE DEPT</span>
+          <span className="bg-slate-950 text-amber-400 px-2 py-0.5 rounded">JURISDICTION: GUJARAT POLICE DEPT - AHMEDABAD ZONE</span>
           <span className="flex items-center gap-1"><Activity className="h-3 w-3 text-emerald-950 animate-pulse" /> DISPATCH NODE: ACTIVE</span>
           <span>THREAT LEVEL: ALPHA-2</span>
         </div>

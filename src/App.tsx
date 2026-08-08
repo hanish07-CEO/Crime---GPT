@@ -110,10 +110,10 @@ export default function App() {
           } else {
             profile = {
               uid: currentUser.uid,
-              email: currentUser.email || "officer@metropolice.gov",
-              displayName: currentUser.displayName || "Detective Jane Miller",
-              badgeNumber: "DS-2948",
-              department: "Special Investigations Division",
+              email: currentUser.email || "officer@gujaratpolice.gov.in",
+              displayName: currentUser.displayName || "Inspector R.K. Jadeja",
+              badgeNumber: "AHM-2024-IO-047",
+              department: "Gujarat Police Cyber Crime Branch - Ahmedabad",
               clearanceLevel: "Level 4 - Top Secret / CJIS",
               createdAt: new Date().toISOString()
             };
@@ -715,11 +715,11 @@ export default function App() {
               onContinueAsGuest={() => {
                 const guestProfile = {
                   uid: "guest_" + Date.now(),
-                  email: "officer.guest@metropolice.gov",
-                  displayName: "Officer Guest (Demo Mode)",
-                  badgeNumber: "DS-GUEST",
-                  department: "Special Investigations Division",
-                  clearanceLevel: "Level 3 - Guest Access",
+                  email: "officer.guest@gujaratpolice.gov.in",
+                  displayName: "Inspector Guest (Demo Mode)",
+                  badgeNumber: "AHM-GUEST-01",
+                  department: "Gujarat Police Cyber Crime Branch - Ahmedabad",
+                  clearanceLevel: "Level 3 - Guest Clearance",
                 };
                 setUserProfile(guestProfile);
                 setShowLoginModal(false);
@@ -756,11 +756,11 @@ export default function App() {
             onContinueAsGuest={() => {
               const guestProfile = {
                 uid: "guest_" + Date.now(),
-                email: "officer.guest@metropolice.gov",
-                displayName: "Officer Guest (Demo Mode)",
-                badgeNumber: "DS-GUEST",
-                department: "Special Investigations Division",
-                clearanceLevel: "Level 3 - Guest Access",
+                email: "officer.guest@gujaratpolice.gov.in",
+                displayName: "Inspector Guest (Demo Mode)",
+                badgeNumber: "AHM-GUEST-01",
+                department: "Gujarat Police Cyber Crime Branch - Ahmedabad",
+                clearanceLevel: "Level 3 - Guest Clearance",
               };
               setUserProfile(guestProfile);
               setActiveModule("dossier");
