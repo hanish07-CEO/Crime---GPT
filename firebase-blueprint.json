@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "Officer and user profiles",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "badgeNumber": { "type": "string" },
+        "department": { "type": "string" },
+        "clearanceLevel": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "cases": {
+      "title": "Cases",
+      "description": "Criminal investigation case dossiers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uid": { "type": "string" },
+        "title": { "type": "string" },
+        "incidentType": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "location": { "type": "string" },
+        "rawNotes": { "type": "string" },
+        "narrative": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "title"]
+    }
+  }
+}

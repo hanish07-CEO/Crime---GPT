@@ -1,0 +1,6 @@
+{
+  "name": "CrimeGPT",
+  "description": "AI-powered automation for structured crime documentation, penal code analysis, legal intelligence, and investigation reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
