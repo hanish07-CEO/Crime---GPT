@@ -83,9 +83,6 @@ export default function ModuleNavigation({
         >
           <FileCode2 className="h-3.5 w-3.5" />
           <span>4. SOLUTION DOC & ROADMAP</span>
-          <span className="px-1.5 py-0.2 bg-amber-400/20 text-amber-300 text-[9px] rounded border border-amber-400/30">
-            PROPOSAL
-          </span>
         </button>
       </div>
 

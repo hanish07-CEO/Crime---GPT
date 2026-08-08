@@ -55,7 +55,7 @@ export default function App() {
 
   // Access control guard helper
   const handleSelectModule = (module: "portal" | "dossier" | "workspace" | "solutionDocument") => {
-    if (!userProfile && module !== "portal") {
+    if (!userProfile && (module === "dossier" || module === "workspace")) {
       showToast("Access Restricted: Please log in or authenticate officer badge first.", "error");
       setActiveModule("portal");
       return;
@@ -737,15 +737,9 @@ export default function App() {
         </div>
       )}
 
-      {/* MODULE 1: OFFICER PORTAL & LOGIN PAGE (FORCED UNTIL AUTHENTICATED) */}
-      {(activeModule === "portal" || !userProfile) && (
+      {/* MODULE 1: OFFICER PORTAL & LOGIN PAGE */}
+      {activeModule === "portal" && (
         <div className="flex-1 bg-slate-950 overflow-y-auto">
-          {!userProfile && activeModule !== "portal" && (
-            <div className="bg-amber-500/20 border-b border-amber-500/40 px-4 py-2.5 text-amber-300 text-xs font-mono text-center font-bold flex items-center justify-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
-              <span>🔒 RESTRICTED LAW ENFORCEMENT SYSTEM: Please sign in or authenticate your officer credentials below to access CrimeGPT features.</span>
-            </div>
-          )}
           <LoginPage
             userProfile={userProfile}
             onLoginSuccess={(profile) => {
@@ -777,12 +771,13 @@ export default function App() {
                 setActiveModule("portal");
               }
             }}
+            onOpenSolutionDoc={() => setActiveModule("solutionDocument")}
           />
         </div>
       )}
 
       {/* MODULE 4: SOLUTION DOCUMENT PROPOSAL & ROADMAP */}
-      {userProfile && activeModule === "solutionDocument" && (
+      {activeModule === "solutionDocument" && (
         <div className="flex-1 bg-slate-950 overflow-y-auto p-4 sm:p-6">
           <SolutionDocument onCopy={copyToClipboard} />
         </div>
