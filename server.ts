@@ -441,7 +441,7 @@ async function startServer() {
     console.log("dist/index.html not found. Initializing Vite middleware fallback...");
     try {
       const vite = await createViteServer({
-        server: { middlewareMode: true },
+        server: { middlewareMode: true, allowedHosts: true },
         appType: "spa",
       });
       app.use(vite.middlewares);
