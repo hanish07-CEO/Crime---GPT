@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Shield, Lock, UserCheck, AlertTriangle, Fingerprint, LogIn, Key, Mail, Building, BadgeCheck, Loader2 } from "lucide-react";
+import { Lock, Eye, ShieldCheck, AlertTriangle, Fingerprint, LogIn, Key, Mail, Building, BadgeCheck, Loader2, Globe } from "lucide-react";
 import { auth, googleProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, db } from "../lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
@@ -11,12 +11,12 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onLoginSuccess, onContinueAsGuest, userProfile, onSignOut }: LoginPageProps) {
-  const [authMode, setAuthMode] = useState<"signin" | "register" | "badge">("signin");
+  const [authMode, setAuthMode] = useState<"badge" | "email" | "register">("badge");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [badgeNumber, setBadgeNumber] = useState("DS-2948");
-  const [officerName, setOfficerName] = useState("Det. Jane Miller");
-  const [department, setDepartment] = useState("Special Investigations Division");
+  const [badgeNumber, setBadgeNumber] = useState("AHM-2024-IO-047");
+  const [officerName, setOfficerName] = useState("Det. Officer / Inspector");
+  const [department, setDepartment] = useState("Gujarat Police Cyber Crime Branch");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -27,11 +27,11 @@ export default function LoginPage({ onLoginSuccess, onContinueAsGuest, userProfi
 
       const profileData = {
         uid: user.uid,
-        email: user.email || `${badgeNumber.toLowerCase()}@metro.pd`,
-        displayName: customData?.displayName || user.displayName || officerName || "Detective",
-        badgeNumber: customData?.badgeNumber || badgeNumber || "DS-2948",
-        department: customData?.department || department || "Special Investigations Division",
-        clearanceLevel: "Level 4 - Top Secret / CJIS",
+        email: user.email || `${badgeNumber.toLowerCase().replace(/[^a-z0-9]/g, "")}@metropolice.gov`,
+        displayName: customData?.displayName || user.displayName || officerName || "Officer",
+        badgeNumber: customData?.badgeNumber || badgeNumber || "AHM-2024-IO-047",
+        department: customData?.department || department || "Gujarat Police Cyber Crime Branch",
+        clearanceLevel: "Level 4 - Cyber Crime Unit / Top Secret",
         updatedAt: new Date().toISOString(),
         ...(docSnap.exists() ? {} : { createdAt: new Date().toISOString() })
       };
@@ -42,11 +42,11 @@ export default function LoginPage({ onLoginSuccess, onContinueAsGuest, userProfi
       console.warn("Firestore sync warning:", err);
       return {
         uid: user.uid,
-        email: user.email || `${badgeNumber}@metro.pd`,
+        email: user.email || `${badgeNumber}@metropolice.gov`,
         displayName: user.displayName || officerName,
         badgeNumber,
         department,
-        clearanceLevel: "Level 4 - Top Secret / CJIS"
+        clearanceLevel: "Level 4 - Cyber Crime Unit"
       };
     }
   };
@@ -90,25 +90,30 @@ export default function LoginPage({ onLoginSuccess, onContinueAsGuest, userProfi
       onLoginSuccess(profile);
     } catch (err: any) {
       console.error("Auth error:", err);
-      setErrorMsg(err.message || "Authentication failed. Check credentials.");
+      setErrorMsg(err.message || "Authentication failed. Please verify credentials.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBadgeQuickLogin = async () => {
+  const handleBadgeLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!badgeNumber) {
+      setErrorMsg("Please enter Officer Badge Number.");
+      return;
+    }
+
     setLoading(true);
     setErrorMsg("");
     try {
-      // Demo officer quick login with synthetic user saved in Firestore
       const mockUid = `badge_${badgeNumber.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
       const mockUser = {
         uid: mockUid,
-        email: `${badgeNumber.toLowerCase()}@metropolice.gov`,
-        displayName: officerName
+        email: `${badgeNumber.toLowerCase().replace(/[^a-z0-9]/g, "")}@metropolice.gov`,
+        displayName: officerName || "Officer " + badgeNumber
       };
       const profile = await syncUserToFirestore(mockUser, {
-        displayName: officerName,
+        displayName: officerName || "Officer " + badgeNumber,
         badgeNumber,
         department
       });
@@ -121,42 +126,57 @@ export default function LoginPage({ onLoginSuccess, onContinueAsGuest, userProfi
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4 relative font-sans overflow-hidden">
+    <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col justify-center items-center p-4 relative font-sans overflow-hidden select-none">
       
-      {/* Background Subtle Tactical Visual Grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#d97706_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
-      
-      {/* Classification Header Banner */}
-      <div className="fixed top-0 left-0 right-0 bg-amber-500 text-slate-950 px-4 py-1 flex items-center justify-between text-[10px] font-mono font-bold tracking-widest uppercase border-b border-amber-600 z-10 select-none">
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-slate-950 animate-ping" />
-          <AlertTriangle className="h-3 w-3 stroke-[2.5]" />
-          <span>CRIMEGPT INTEL PORTAL // RESTRICTED ACCESS LAW ENFORCEMENT SYSTEM</span>
-        </div>
-        <div className="hidden sm:block">CJIS SECURITY POLICY v5.9</div>
-      </div>
+      {/* Background Subtle Blueprint Grid Pattern */}
+      <div 
+        className="absolute inset-0 opacity-15 pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(#1e293b 1px, transparent 1px), linear-gradient(to right, #1e293b 1px, transparent 1px)`,
+          backgroundSize: '32px 32px'
+        }}
+      />
 
-      <div className="w-full max-w-md bg-slate-900/90 border-2 border-amber-500/40 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10 space-y-6 my-12">
+      {/* Central Blue Glow Effect */}
+      <div className="absolute w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none -z-0" />
+
+      {/* Main Login Container matching CrimeGPT-X visual design */}
+      <div className="w-full max-w-[440px] bg-[#0c1322]/90 border border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl relative z-10 space-y-5 my-8">
         
-        {/* Logo and App Title Header */}
+        {/* Futuristic Hexagon Logo with Radar Eye */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 bg-gradient-to-br from-amber-500/20 to-amber-600/10 rounded-2xl border border-amber-500/30 text-amber-500 shadow-lg shadow-amber-500/10 mb-1">
-            <Shield className="h-10 w-10 stroke-[1.75]" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-cyan-950/40 border border-cyan-500/40 text-cyan-400 shadow-lg shadow-cyan-500/10 mb-1">
+            <svg className="w-8 h-8 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <polygon points="12 2 22 7.5 22 16.5 12 22 2 16.5 2 7.5 12 2" />
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 6a6 6 0 0 1 6 6" strokeLinecap="round" />
+            </svg>
           </div>
-          <h1 className="text-3xl font-black tracking-wider text-white font-mono uppercase">
-            Crime<span className="text-amber-500">GPT</span>
+
+          <h1 className="text-3xl font-extrabold tracking-tight text-white font-sans">
+            CrimeGPT-X
           </h1>
-          <p className="text-xs text-amber-400 font-mono font-bold uppercase tracking-widest">
-            OFFICER CREDENTIAL & DATABASE LOGIN
+          <p className="text-[10px] text-slate-400 font-mono tracking-[0.25em] uppercase font-bold">
+            POLICE INTELLIGENCE PLATFORM
           </p>
-          <p className="text-[11px] text-slate-400">
-            Authenticated via Google Workspace & Firebase Cloud Infrastructure
+
+          {/* Secured Banner Badge */}
+          <div className="pt-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono">
+              <Lock className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Secured · Gujarat Police Cyber Crime Branch</span>
+            </div>
+          </div>
+
+          {/* Status Indicators Line */}
+          <p className="text-[10px] text-cyan-500/80 font-mono tracking-wider pt-1">
+            AUTH_MODULE: <span className="text-emerald-400">ONLINE</span> · ENCRYPTION: <span className="text-slate-300">AES-256</span> · NODE: <span className="text-slate-300">AHM-CCB-01</span>
           </p>
         </div>
 
         {userProfile ? (
-          /* Active Officer Authenticated Card */
-          <div className="bg-slate-950 p-5 rounded-xl border border-emerald-500/40 space-y-4 shadow-xl">
+          /* Authenticated State Card */
+          <div className="bg-[#080d19] p-5 rounded-xl border border-emerald-500/40 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <BadgeCheck className="h-5 w-5 text-emerald-400" />
@@ -172,30 +192,26 @@ export default function LoginPage({ onLoginSuccess, onContinueAsGuest, userProfi
             <div className="space-y-2 text-xs font-mono">
               <div className="flex justify-between">
                 <span className="text-slate-500">NAME:</span>
-                <span className="text-slate-200 font-bold">{userProfile.displayName || "Detective"}</span>
+                <span className="text-slate-200 font-bold">{userProfile.displayName || "Officer"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">BADGE ID:</span>
-                <span className="text-amber-400 font-bold">{userProfile.badgeNumber || "DS-2948"}</span>
+                <span className="text-cyan-400 font-bold">{userProfile.badgeNumber || "AHM-2024-IO-047"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">DEPARTMENT:</span>
-                <span className="text-slate-300">{userProfile.department || "Special Investigations"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">DATABASE:</span>
-                <span className="text-emerald-400 font-semibold">Google Firestore Live Sync</span>
+                <span className="text-slate-300">{userProfile.department || "Gujarat Police Cyber Crime"}</span>
               </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-800 grid grid-cols-1 gap-2">
+            <div className="pt-2 grid grid-cols-1 gap-2">
               <button
                 type="button"
                 onClick={onContinueAsGuest}
-                className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-mono font-bold text-xs rounded-lg transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition-all shadow-lg shadow-blue-600/30 cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>PROCEED TO INTEL WORKSPACE</span>
-                <UserCheck className="h-4 w-4" />
+                <span>ENTER CRIMEGPT-X PLATFORM</span>
+                <ShieldCheck className="h-4 w-4" />
               </button>
 
               {onSignOut && (
@@ -204,254 +220,242 @@ export default function LoginPage({ onLoginSuccess, onContinueAsGuest, userProfi
                   onClick={onSignOut}
                   className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-red-400 font-mono text-xs rounded-lg border border-red-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  <span>Sign Out Officer Account</span>
+                  <span>Sign Out Account</span>
                 </button>
               )}
             </div>
           </div>
         ) : (
           <>
-            {/* Mode Selector Tabs */}
-        <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono">
-          <button
-            type="button"
-            onClick={() => { setAuthMode("signin"); setErrorMsg(""); }}
-            className={`py-2 rounded-lg font-bold transition-all ${
-              authMode === "signin"
-                ? "bg-amber-500 text-slate-950 shadow"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Google / Email
-          </button>
-          <button
-            type="button"
-            onClick={() => { setAuthMode("badge"); setErrorMsg(""); }}
-            className={`py-2 rounded-lg font-bold transition-all ${
-              authMode === "badge"
-                ? "bg-amber-500 text-slate-950 shadow"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Badge ID
-          </button>
-          <button
-            type="button"
-            onClick={() => { setAuthMode("register"); setErrorMsg(""); }}
-            className={`py-2 rounded-lg font-bold transition-all ${
-              authMode === "register"
-                ? "bg-amber-500 text-slate-950 shadow"
-                : "text-slate-400 hover:text-slate-200"
-            }`}
-          >
-            Register
-          </button>
-        </div>
+            {/* Mode Switcher Pills */}
+            <div className="grid grid-cols-3 gap-1 bg-slate-950/80 p-1 rounded-lg border border-slate-800/80 text-[11px] font-mono">
+              <button
+                type="button"
+                onClick={() => { setAuthMode("badge"); setErrorMsg(""); }}
+                className={`py-1.5 rounded font-medium transition-all cursor-pointer ${
+                  authMode === "badge"
+                    ? "bg-blue-600 text-white font-bold shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Badge ID
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMode("email"); setErrorMsg(""); }}
+                className={`py-1.5 rounded font-medium transition-all cursor-pointer ${
+                  authMode === "email"
+                    ? "bg-blue-600 text-white font-bold shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Email
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMode("register"); setErrorMsg(""); }}
+                className={`py-1.5 rounded font-medium transition-all cursor-pointer ${
+                  authMode === "register"
+                    ? "bg-blue-600 text-white font-bold shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                Register
+              </button>
+            </div>
 
-        {errorMsg && (
-          <div className="bg-red-950/80 border border-red-500/50 p-3 rounded-lg text-red-200 text-xs font-mono flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {/* Google One-Click Login Button */}
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={handleGoogleSignIn}
-            disabled={loading}
-            className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-xs rounded-xl border border-slate-600 hover:border-amber-500 flex items-center justify-center gap-3 transition-all cursor-pointer shadow-md group disabled:opacity-50"
-          >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-            ) : (
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
+            {errorMsg && (
+              <div className="bg-red-950/80 border border-red-500/50 p-2.5 rounded-lg text-red-200 text-xs font-mono flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
             )}
-            <span>SIGN IN WITH GOOGLE FRAMEWORK</span>
-          </button>
 
-          <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-slate-800" />
-            <span className="flex-shrink mx-3 text-[10px] font-mono text-slate-500 uppercase">Or Police Credentials</span>
-            <div className="flex-grow border-t border-slate-800" />
-          </div>
-        </div>
-
-        {/* Email / Badge Form */}
-        {authMode === "badge" ? (
-          <div className="space-y-4 font-mono text-xs">
-            <div>
-              <label className="block text-[10px] text-amber-400 font-bold uppercase mb-1">
-                Badge / Officer Serial ID
-              </label>
-              <div className="relative">
-                <BadgeCheck className="absolute left-3 top-2.5 h-4 w-4 text-amber-500" />
-                <input
-                  type="text"
-                  value={badgeNumber}
-                  onChange={(e) => setBadgeNumber(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-amber-400 font-bold focus:outline-none focus:border-amber-500"
-                  placeholder="DS-2948"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] text-slate-400 uppercase mb-1">
-                Officer Full Name & Rank
-              </label>
-              <input
-                type="text"
-                value={officerName}
-                onChange={(e) => setOfficerName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"
-                placeholder="Det. Jane Miller"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] text-slate-400 uppercase mb-1">
-                Department / Squad
-              </label>
-              <div className="relative">
-                <Building className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-                <input
-                  type="text"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"
-                  placeholder="Special Investigations Division"
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleBadgeQuickLogin}
-              disabled={loading}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-mono font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
-              ) : (
-                <Fingerprint className="h-4 w-4" />
-              )}
-              <span>AUTHENTICATE OFFICER BADGE</span>
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleEmailAuth} className="space-y-4 font-mono text-xs">
-            <div>
-              <label className="block text-[10px] text-slate-400 uppercase mb-1">
-                Official Department Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"
-                  placeholder="officer.miller@metropolice.gov"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] text-slate-400 uppercase mb-1">
-                Security Password
-              </label>
-              <div className="relative">
-                <Key className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"
-                  placeholder="••••••••••••"
-                />
-              </div>
-            </div>
-
-            {authMode === "register" && (
-              <div className="space-y-3 pt-1">
+            {/* Main Badge Login Form */}
+            {authMode === "badge" && (
+              <form onSubmit={handleBadgeLogin} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] text-slate-400 uppercase mb-1">
-                    Officer Badge ID
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Officer Badge Number
                   </label>
                   <input
                     type="text"
                     value={badgeNumber}
                     onChange={(e) => setBadgeNumber(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-amber-400 font-bold focus:outline-none focus:border-amber-500"
+                    className="w-full bg-[#080d19] border border-slate-700/80 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono"
+                    placeholder="AHM-2024-IO-047"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#080d19] border border-slate-700/80 rounded-lg px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono"
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-lg transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
+                  )}
+                  <span>Login to CrimeGPT-X</span>
+                </button>
+              </form>
+            )}
+
+            {/* Email Form */}
+            {authMode === "email" && (
+              <form onSubmit={handleEmailAuth} className="space-y-3.5 text-xs">
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                    Department Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#080d19] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono"
+                    placeholder="officer@gujaratpolice.gov.in"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#080d19] border border-slate-700/80 rounded-lg px-3.5 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono"
+                    placeholder="••••••••"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-lg transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <LogIn className="h-4 w-4" />
+                  )}
+                  <span>Sign In with Email</span>
+                </button>
+
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading}
+                    className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-slate-300 font-mono text-xs rounded-lg border border-slate-700 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                    </svg>
+                    <span>Sign In via Google Workspace</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Register Form */}
+            {authMode === "register" && (
+              <form onSubmit={handleEmailAuth} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-300 mb-1">Badge Number</label>
+                  <input
+                    type="text"
+                    value={badgeNumber}
+                    onChange={(e) => setBadgeNumber(e.target.value)}
+                    className="w-full bg-[#080d19] border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 font-mono"
+                    placeholder="AHM-2024-IO-047"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-400 uppercase mb-1">
-                    Full Name & Title
-                  </label>
+                  <label className="block text-slate-300 mb-1">Official Email</label>
                   <input
-                    type="text"
-                    value={officerName}
-                    onChange={(e) => setOfficerName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-500"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#080d19] border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 font-mono"
+                    placeholder="officer@gujaratpolice.gov.in"
                   />
                 </div>
-              </div>
+                <div>
+                  <label className="block text-slate-300 mb-1">Password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#080d19] border border-slate-700 rounded-lg px-3 py-1.5 text-slate-100 font-mono"
+                    placeholder="••••••••"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-all"
+                >
+                  Create Officer Account
+                </button>
+              </form>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-mono font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
-              ) : (
-                <LogIn className="h-4 w-4" />
-              )}
-              <span>{authMode === "register" ? "REGISTER NEW OFFICER ACCOUNT" : "SIGN IN TO CRIMEGPT CORE"}</span>
-            </button>
-          </form>
-        )}
-        </>
-        )}
+            {/* Department Footer Disclaimer */}
+            <div className="text-center text-[11px] text-slate-400 space-y-0.5 pt-1">
+              <p>Gujarat Police Department · Ahmedabad Cyber Crime Branch</p>
+              <p className="text-slate-500 text-[10px]">Confidential — Unauthorized access is a cognizable offence</p>
+            </div>
 
-        {/* Guest / Fast Preview Access Option */}
-        {onContinueAsGuest && (
-          <div className="text-center pt-2 border-t border-slate-800">
-            <button
-              type="button"
-              onClick={onContinueAsGuest}
-              className="text-[11px] font-mono text-slate-400 hover:text-amber-400 transition-colors underline cursor-pointer"
-            >
-              Continue as Guest / Demo Mode
-            </button>
-          </div>
+            {/* Administrator Info Note Box */}
+            <div className="bg-[#080d18] border border-slate-800/80 p-2.5 rounded-lg text-center text-xs text-slate-400 font-sans">
+              Need access? Contact your system administrator for credentials.
+            </div>
+
+            {/* Divider Line OR */}
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-slate-800/80" />
+              <span className="flex-shrink mx-3 text-[10px] font-mono text-slate-500 uppercase">OR</span>
+              <div className="flex-grow border-t border-slate-800/80" />
+            </div>
+
+            {/* Demo Button */}
+            {onContinueAsGuest && (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={onContinueAsGuest}
+                  className="w-full py-2.5 px-4 bg-slate-800/80 hover:bg-slate-700/80 text-white font-semibold text-xs rounded-lg border border-slate-700/80 transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md group"
+                >
+                  <Eye className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <span>View Demo</span>
+                </button>
+
+                <p className="text-[10.5px] text-slate-500 text-center leading-normal">
+                  Explore a pre-loaded demo environment with sample cases, evidence, and AI analysis
+                </p>
+              </div>
+            )}
+          </>
         )}
-
-        <p className="text-[9.5px] text-slate-500 text-center font-mono leading-tight">
-          System activity is recorded under CJIS Audit Policy. Authorized precinct usage only.
-        </p>
-
       </div>
     </div>
   );

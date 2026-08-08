@@ -51,7 +51,17 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Modular View Switcher ("portal" | "dossier" | "workspace" | "solutionDocument")
-  const [activeModule, setActiveModule] = useState<"portal" | "dossier" | "workspace" | "solutionDocument">("workspace");
+  const [activeModule, setActiveModule] = useState<"portal" | "dossier" | "workspace" | "solutionDocument">("portal");
+
+  // Access control guard helper
+  const handleSelectModule = (module: "portal" | "dossier" | "workspace" | "solutionDocument") => {
+    if (!userProfile && module !== "portal") {
+      showToast("Access Restricted: Please log in or authenticate officer badge first.", "error");
+      setActiveModule("portal");
+      return;
+    }
+    setActiveModule(module);
+  };
 
   // Cases list
   const [cases, setCases] = useState<CaseLog[]>([]);
@@ -660,26 +670,28 @@ export default function App() {
       <WorkspaceHeader
         onReset={handleResetWorkspace}
         activeCaseTitle={activeCase?.title}
-        onOpenSolutionDoc={() => setActiveModule("solutionDocument")}
+        onOpenSolutionDoc={() => handleSelectModule("solutionDocument")}
         currentTab={activeModule}
-        onOpenLoginPortal={() => setActiveModule("portal")}
+        onOpenLoginPortal={() => handleSelectModule("portal")}
       />
 
       {/* Primary Modular View Navigation Bar */}
       <ModuleNavigation
         activeModule={activeModule}
-        setActiveModule={setActiveModule}
+        setActiveModule={handleSelectModule}
         userProfile={userProfile}
         onSignOut={async () => {
           try {
             await signOut(auth);
             setUserProfile(null);
+            setActiveModule("portal");
             showToast("Officer signed out safely", "info");
           } catch (err) {
             setUserProfile(null);
+            setActiveModule("portal");
           }
         }}
-        onOpenLoginModal={() => setActiveModule("portal")}
+        onOpenLoginModal={() => handleSelectModule("portal")}
       />
 
       {/* Login Modal Popup if triggered */}
@@ -697,44 +709,72 @@ export default function App() {
               onLoginSuccess={(profile) => {
                 setUserProfile(profile);
                 setShowLoginModal(false);
-                setActiveModule("workspace");
-                showToast("Officer authenticated & connected to Google database", "success");
+                setActiveModule("dossier");
+                showToast("Officer authenticated & connected to CrimeGPT database", "success");
               }}
               onContinueAsGuest={() => {
+                const guestProfile = {
+                  uid: "guest_" + Date.now(),
+                  email: "officer.guest@metropolice.gov",
+                  displayName: "Officer Guest (Demo Mode)",
+                  badgeNumber: "DS-GUEST",
+                  department: "Special Investigations Division",
+                  clearanceLevel: "Level 3 - Guest Access",
+                };
+                setUserProfile(guestProfile);
                 setShowLoginModal(false);
-                setActiveModule("workspace");
+                setActiveModule("dossier");
+                showToast("Authenticated in Guest / Demo Mode", "success");
               }}
               onSignOut={async () => {
                 await signOut(auth);
                 setUserProfile(null);
                 setShowLoginModal(false);
+                setActiveModule("portal");
               }}
             />
           </div>
         </div>
       )}
 
-      {/* MODULE 1: OFFICER PORTAL & LOGIN PAGE */}
-      {activeModule === "portal" && (
+      {/* MODULE 1: OFFICER PORTAL & LOGIN PAGE (FORCED UNTIL AUTHENTICATED) */}
+      {(activeModule === "portal" || !userProfile) && (
         <div className="flex-1 bg-slate-950 overflow-y-auto">
+          {!userProfile && activeModule !== "portal" && (
+            <div className="bg-amber-500/20 border-b border-amber-500/40 px-4 py-2.5 text-amber-300 text-xs font-mono text-center font-bold flex items-center justify-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-amber-400 shrink-0" />
+              <span>🔒 RESTRICTED LAW ENFORCEMENT SYSTEM: Please sign in or authenticate your officer credentials below to access CrimeGPT features.</span>
+            </div>
+          )}
           <LoginPage
             userProfile={userProfile}
             onLoginSuccess={(profile) => {
               setUserProfile(profile);
-              setActiveModule("workspace");
-              showToast("Officer authenticated & connected to Google database", "success");
+              setActiveModule("dossier");
+              showToast("Officer authenticated & connected to CrimeGPT database", "success");
             }}
             onContinueAsGuest={() => {
-              setActiveModule("workspace");
-              showToast("Proceeding to Intel Workspace", "info");
+              const guestProfile = {
+                uid: "guest_" + Date.now(),
+                email: "officer.guest@metropolice.gov",
+                displayName: "Officer Guest (Demo Mode)",
+                badgeNumber: "DS-GUEST",
+                department: "Special Investigations Division",
+                clearanceLevel: "Level 3 - Guest Access",
+              };
+              setUserProfile(guestProfile);
+              setActiveModule("dossier");
+              showToast("Authenticated in Guest / Demo Mode", "success");
             }}
             onSignOut={async () => {
               try {
                 await signOut(auth);
                 setUserProfile(null);
-                showToast("Officer signed out", "info");
+                setActiveModule("portal");
+                showToast("Officer signed out safely", "info");
               } catch (err) {
                 setUserProfile(null);
+                setActiveModule("portal");
               }
             }}
           />
@@ -742,14 +782,14 @@ export default function App() {
       )}
 
       {/* MODULE 4: SOLUTION DOCUMENT PROPOSAL & ROADMAP */}
-      {activeModule === "solutionDocument" && (
+      {userProfile && activeModule === "solutionDocument" && (
         <div className="flex-1 bg-slate-950 overflow-y-auto p-4 sm:p-6">
           <SolutionDocument onCopy={copyToClipboard} />
         </div>
       )}
 
       {/* MODULE 2: INCIDENT DOSSIER (FIELD DATA ENTRY & INTAKE) */}
-      {activeModule === "dossier" && (
+      {userProfile && activeModule === "dossier" && (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-950">
           {/* Left Sidebar: Internal Case History (3 cols) */}
           <div className="lg:col-span-3 border-r border-slate-900 bg-slate-950 flex flex-col">
@@ -943,7 +983,7 @@ export default function App() {
       )}
 
       {/* MODULE 3: INTEL WORKSPACE (AI ANALYSIS & LEGAL DOCUMENTS) */}
-      {activeModule === "workspace" && (
+      {userProfile && activeModule === "workspace" && (
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-950">
         
         {/* Left Sidebar: Internal Case History (3 cols) */}
