@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
@@ -427,18 +428,29 @@ Maintain a sleek, formal, authoritative tone and format responses beautifully wi
 
 // Serve static assets and index.html based on development vs production
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
+  const distPath = path.join(process.cwd(), 'dist');
+  const distIndexPath = path.join(distPath, 'index.html');
+
+  if (fs.existsSync(distIndexPath)) {
+    console.log("Serving production static build from dist/");
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      res.sendFile(distIndexPath);
     });
+  } else {
+    console.log("dist/index.html not found. Initializing Vite middleware fallback...");
+    try {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } catch (e) {
+      console.error("Vite middleware fallback failed:", e);
+      app.get('*', (req, res) => {
+        res.status(404).send("<h1>CrimeGPT Application Server</h1><p>Application assets are building or unavailable. Please run 'npm run build' and restart.</p>");
+      });
+    }
   }
 
   app.listen(PORT, "0.0.0.0", () => {
