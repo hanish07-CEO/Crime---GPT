@@ -173,31 +173,6 @@ export default function LoginPage({ onLoginSuccess, onContinueAsGuest, userProfi
           <p className="text-[10px] text-cyan-500/80 font-mono tracking-wider pt-1">
             AUTH_MODULE: <span className="text-emerald-400">ONLINE</span> · ENCRYPTION: <span className="text-slate-300">AES-256</span> · NODE: <span className="text-slate-300">AHM-CCB-01</span>
           </p>
-
-          {/* Solution Proposal Direct Launch Banner */}
-          <div className="pt-2">
-            <div className="bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border border-amber-500/50 rounded-2xl p-4 text-center space-y-3 shadow-xl backdrop-blur-md">
-              <div className="flex items-center justify-center gap-2 text-amber-400 text-xs font-mono font-bold uppercase tracking-wider">
-                <FileCode2 className="h-4 w-4 text-amber-400" />
-                <span>KANAD S.H.I.E.L.D. SUBMISSION</span>
-              </div>
-              <p className="text-xs text-slate-200">
-                Evaluating the project? Access the official comprehensive proposal document directly.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-                {onOpenSolutionDoc && (
-                  <button
-                    type="button"
-                    onClick={onOpenSolutionDoc}
-                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2 cursor-pointer"
-                  >
-                    <FileCode2 className="h-4 w-4 text-slate-950" />
-                    <span>VIEW SOLUTION PROPOSAL</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
 
         {userProfile ? (
