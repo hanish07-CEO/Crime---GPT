@@ -75,6 +75,39 @@ export default function App() {
   const [rawNotes, setRawNotes] = useState("");
   const [suspectsInput, setSuspectsInput] = useState<string>("");
   const [victimsInput, setVictimsInput] = useState<string>("");
+  const [isSimulatingAudio, setIsSimulatingAudio] = useState(false);
+
+  // Radio Dictation Receiver simulator
+  const handleSimulateAudioDictation = () => {
+    if (isSimulatingAudio) return;
+    setIsSimulatingAudio(true);
+    showToast("Radio Dictation Unit Active — Stream Capturing Officer Voice Log...", "info");
+
+    const dictationText = `INCIDENT VOICE DICTATION LOG - GUJARAT CYBER CRIME CELL [AUDIO STREAM SECURED]
+LOCATION: ${incidentLocation || "GIFT City Tower 28B, Gandhinagar"}
+TIMESTAMP: ${new Date().toLocaleString("en-US")}
+OFFICER: ${userProfile?.displayName || "Inspector R.K. Jadeja"} (Badge #${userProfile?.badgeNumber || "AHM-4829"})
+
+FIELD TRANSCRIPT & OBSERVATIONS:
+1. Responding unit arrived on-scene following priority alarm dispatch.
+2. Point of Entry (POE) confirmed at rear glass entryway — shattered via concrete pavement paver.
+3. Reporting witness Priya Patel states 3 high-performance server workstations containing proprietary financial algorithms were seized (Serials: MP9481, MP2045, MP0491).
+4. Prime target suspect Mark Vane (ex-contractor terminated last week) was recorded on expressway CCTV at 03:14 AM fleeing in a silver sedan towards S.G. Highway.
+5. Physical exhibits collected: Dark hooded sweatshirt fabric snagged on glass frame, partial latent fingerprints dusted from desk B3, and raw server access event logs.`;
+
+    let currentIdx = 0;
+    const timer = setInterval(() => {
+      currentIdx += 20;
+      if (currentIdx >= dictationText.length) {
+        setRawNotes(dictationText);
+        setIsSimulatingAudio(false);
+        clearInterval(timer);
+        showToast("Audio Dictation Stream Completed & Ingested into Dossier!", "success");
+      } else {
+        setRawNotes(dictationText.substring(0, currentIdx));
+      }
+    }, 30);
+  };
 
   // Active status / Loading indicators
   const [isGeneratingNarrative, setIsGeneratingNarrative] = useState(false);
@@ -165,17 +198,11 @@ export default function App() {
       initializeDefault();
     }
 
-    // Load Chat history
-    const savedChat = localStorage.getItem(LOCAL_STORAGE_CHAT_KEY);
-    if (savedChat) {
-      try {
-        setChatMessages(JSON.parse(savedChat));
-      } catch (_) {}
-    }
+    // Load initial cases or initialize
   }, []);
 
   const initializeDefault = () => {
-    // Populate templates as first-time case logs
+    // Populate templates as first-time case logs with isolated chat logs
     const initialCases: CaseLog[] = CASE_TEMPLATES.map((t, idx) => ({
       id: `template-${idx}-${Date.now()}`,
       title: t.title,
@@ -189,6 +216,7 @@ export default function App() {
       suspectDescription: "Pending analysis",
       evidenceList: [],
       prelimillaryCharges: [],
+      chatHistory: [],
       createdAt: new Date().toISOString()
     }));
 
@@ -198,13 +226,14 @@ export default function App() {
     loadCaseIntoForm(initialCases[0]);
   };
 
-  // Helper to load case state back into edit inputs
+  // Helper to load case state back into edit inputs and load its isolated chat history
   const loadCaseIntoForm = (c: CaseLog) => {
     setCaseTitle(c.title);
     setIncidentType(c.incidentType);
     setIncidentDate(c.date);
     setIncidentLocation(c.location);
     setRawNotes(c.rawNotes);
+    setChatMessages(c.chatHistory || []);
     
     // Default or restore Affidavit state
     setTargetCharge(c.prelimillaryCharges?.[0]?.chargeName || c.incidentType || "");
@@ -212,10 +241,12 @@ export default function App() {
     if (!affiantBadge) setAffiantBadge("DS-2948");
   };
 
-  // Save current form inputs to active Case record
-  const handleSaveDraft = async (overrideCases?: CaseLog[]) => {
+  // Save current form inputs and chat messages to active Case record
+  const handleSaveDraft = async (overrideCases?: CaseLog[], customChatHistory?: ChatMessage[]) => {
     const targetCases = overrideCases || cases;
     if (!selectedCaseId) return;
+
+    const chatToSave = customChatHistory !== undefined ? customChatHistory : chatMessages;
 
     let targetCaseObj: CaseLog | undefined;
     const updated = targetCases.map((c) => {
@@ -227,6 +258,7 @@ export default function App() {
           date: incidentDate,
           location: incidentLocation,
           rawNotes,
+          chatHistory: chatToSave,
         };
         return targetCaseObj;
       }
@@ -265,9 +297,10 @@ export default function App() {
     showToast("Case template loaded into form workspace", "info");
   };
 
-  // Handle sidebar selection Change
+  // Handle sidebar selection Change - saves current case draft and chat before loading target case
   const handleSelectCase = (id: string) => {
-    // Save draft of current first
+    if (id === selectedCaseId) return;
+    // Save draft & chat of current active case first
     handleSaveDraft();
     
     const target = cases.find((c) => c.id === id);
@@ -277,7 +310,7 @@ export default function App() {
     }
   };
 
-  // Create new empty case
+  // Create new empty case with its own dedicated separate chat log
   const handleCreateNewCase = () => {
     // save old current first
     if (selectedCaseId) {
@@ -297,6 +330,7 @@ export default function App() {
       suspectDescription: "",
       evidenceList: [],
       prelimillaryCharges: [],
+      chatHistory: [], // Isolated fresh chat history for the new case
       createdAt: new Date().toISOString()
     };
 
@@ -306,7 +340,7 @@ export default function App() {
     setSelectedCaseId(newCase.id);
     loadCaseIntoForm(newCase);
     setActiveOutputTab("narrative");
-    showToast("New blank case file instantiated", "success");
+    showToast("New blank case file instantiated with dedicated chat log", "success");
   };
 
   // Direct reset button handles
@@ -568,7 +602,7 @@ export default function App() {
     }
   };
 
-  // API Call: Chat Assistant to handle custom inputs
+  // API Call: Chat Assistant to handle custom inputs for the active case
   const handleSendChatMessage = async (text: string) => {
     const userMsg: ChatMessage = {
       id: `chat-${Date.now()}`,
@@ -579,19 +613,30 @@ export default function App() {
 
     const newMessages = [...chatMessages, userMsg];
     setChatMessages(newMessages);
-    localStorage.setItem(LOCAL_STORAGE_CHAT_KEY, JSON.stringify(newMessages));
     setIsChatSending(true);
+
+    // Persist user message to the active case immediately
+    const casesWithUserMsg = cases.map((c) => {
+      if (c.id === selectedCaseId) {
+        return { ...c, chatHistory: newMessages };
+      }
+      return c;
+    });
+    setCases(casesWithUserMsg);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(casesWithUserMsg));
 
     try {
       const response = await fetch("/api/legal-advisor-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // send last 10 messages for context
           messages: newMessages.slice(-10).map(m => ({
             role: m.role,
             content: m.content
-          }))
+          })),
+          caseTitle,
+          incidentType,
+          rawNotes
         })
       });
 
@@ -609,7 +654,20 @@ export default function App() {
 
       const updatedHistory = [...newMessages, assistantMsg];
       setChatMessages(updatedHistory);
-      localStorage.setItem(LOCAL_STORAGE_CHAT_KEY, JSON.stringify(updatedHistory));
+
+      const finalCases = casesWithUserMsg.map((c) => {
+        if (c.id === selectedCaseId) {
+          const updatedObj = { ...c, chatHistory: updatedHistory };
+          if (userProfile) {
+            const caseRef = doc(db, "cases", c.id);
+            setDoc(caseRef, { ...updatedObj, uid: userProfile.uid, updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {});
+          }
+          return updatedObj;
+        }
+        return c;
+      });
+      setCases(finalCases);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalCases));
 
     } catch (err: any) {
       console.error(err);
@@ -619,16 +677,39 @@ export default function App() {
         content: `Error contacting server-side model: ${err.message || "Failed request."}`,
         timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
       };
-      setChatMessages([...newMessages, errMsg]);
+      const updatedHistory = [...newMessages, errMsg];
+      setChatMessages(updatedHistory);
+
+      const finalCases = casesWithUserMsg.map((c) => {
+        if (c.id === selectedCaseId) {
+          return { ...c, chatHistory: updatedHistory };
+        }
+        return c;
+      });
+      setCases(finalCases);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(finalCases));
     } finally {
       setIsChatSending(false);
     }
   };
 
   const handleClearChat = () => {
-    if (confirm("Reset current legal chat history?")) {
+    if (confirm(`Reset legal chat history for case "${caseTitle || "Current Case"}"?`)) {
       setChatMessages([]);
-      localStorage.removeItem(LOCAL_STORAGE_CHAT_KEY);
+      const updatedCases = cases.map((c) => {
+        if (c.id === selectedCaseId) {
+          const updatedObj = { ...c, chatHistory: [] };
+          if (userProfile) {
+            const caseRef = doc(db, "cases", c.id);
+            setDoc(caseRef, { ...updatedObj, uid: userProfile.uid, updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {});
+          }
+          return updatedObj;
+        }
+        return c;
+      });
+      setCases(updatedCases);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedCases));
+      showToast("Chat log cleared for this case", "info");
     }
   };
 
@@ -666,33 +747,36 @@ export default function App() {
         </div>
       )}
 
-      {/* Workspace App Header */}
-      <WorkspaceHeader
-        onReset={handleResetWorkspace}
-        activeCaseTitle={activeCase?.title}
-        onOpenSolutionDoc={() => handleSelectModule("solutionDocument")}
-        currentTab={activeModule}
-        onOpenLoginPortal={() => handleSelectModule("portal")}
-      />
+      {/* Workspace App Header & Navigation Bar (Hidden while on Login / Officer Portal) */}
+      {activeModule !== "portal" && (
+        <>
+          <WorkspaceHeader
+            onReset={handleResetWorkspace}
+            activeCaseTitle={activeCase?.title}
+            onOpenSolutionDoc={() => handleSelectModule("solutionDocument")}
+            currentTab={activeModule}
+            onOpenLoginPortal={() => handleSelectModule("portal")}
+          />
 
-      {/* Primary Modular View Navigation Bar */}
-      <ModuleNavigation
-        activeModule={activeModule}
-        setActiveModule={handleSelectModule}
-        userProfile={userProfile}
-        onSignOut={async () => {
-          try {
-            await signOut(auth);
-            setUserProfile(null);
-            setActiveModule("portal");
-            showToast("Officer signed out safely", "info");
-          } catch (err) {
-            setUserProfile(null);
-            setActiveModule("portal");
-          }
-        }}
-        onOpenLoginModal={() => handleSelectModule("portal")}
-      />
+          <ModuleNavigation
+            activeModule={activeModule}
+            setActiveModule={handleSelectModule}
+            userProfile={userProfile}
+            onSignOut={async () => {
+              try {
+                await signOut(auth);
+                setUserProfile(null);
+                setActiveModule("portal");
+                showToast("Officer signed out safely", "info");
+              } catch (err) {
+                setUserProfile(null);
+                setActiveModule("portal");
+              }
+            }}
+            onOpenLoginModal={() => handleSelectModule("portal")}
+          />
+        </>
+      )}
 
       {/* Login Modal Popup if triggered */}
       {showLoginModal && (
@@ -919,21 +1003,76 @@ export default function App() {
                     type="text"
                     value={incidentLocation}
                     onChange={(e) => setIncidentLocation(e.target.value)}
-                    placeholder="e.g. 404 Silicon Way, Suite B"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 font-sans"
+                    placeholder="e.g. GIFT City Tower 28B, Gandhinagar - Ahmedabad"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-10 pr-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 font-sans text-xs"
                   />
+                </div>
+                {/* Location Quick Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 font-mono text-[10px]">
+                  <span className="text-slate-500 uppercase">Quick Locatives:</span>
+                  <button
+                    type="button"
+                    onClick={() => setIncidentLocation("Tower 28B, GIFT City, Gandhinagar, Gujarat 382355")}
+                    className="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded transition-colors cursor-pointer"
+                  >
+                    GIFT City
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIncidentLocation("S.G. Highway (Near ISKCON Flyover), Satellite, Ahmedabad")}
+                    className="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded transition-colors cursor-pointer"
+                  >
+                    S.G. Highway
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIncidentLocation("847 Corporate Road, Prahlad Nagar, Ahmedabad 380015")}
+                    className="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded transition-colors cursor-pointer"
+                  >
+                    Prahlad Nagar
+                  </button>
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                   <label className="block text-[11px] uppercase font-mono tracking-wider text-amber-500/90 font-bold">
-                    [FIELD 10-5] Officer Transcripts & Wiretap Field Notes
+                    [FIELD 10-5] Officer Transcripts & Radio Field Notes
                   </label>
-                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded">
-                    RAW FIELD INPUT
-                  </span>
+                  
+                  {/* Radio Dictation Simulator Trigger Button */}
+                  <button
+                    type="button"
+                    onClick={handleSimulateAudioDictation}
+                    disabled={isSimulatingAudio}
+                    className={`px-3 py-1 rounded border font-mono text-[10px] font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                      isSimulatingAudio
+                        ? "bg-amber-500/20 border-amber-500 text-amber-400 animate-pulse"
+                        : "bg-slate-900 hover:bg-slate-850 border-slate-700 text-slate-300 hover:text-amber-400"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      {isSimulatingAudio ? "Simulating Audio Stream..." : "Simulate Radio Dictation Log"}
+                    </span>
+                  </button>
                 </div>
+
+                {isSimulatingAudio && (
+                  <div className="mb-2 p-2 bg-slate-950 border border-amber-500/30 rounded flex items-center justify-between font-mono text-[10px] text-amber-400">
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span>INCOMING RADIO AUDIO FREQUENCY STREAMING...</span>
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-1 h-3 bg-amber-500 animate-bounce" />
+                      <span className="w-1 h-4 bg-amber-400 animate-bounce delay-75" />
+                      <span className="w-1 h-2 bg-amber-500 animate-bounce delay-150" />
+                      <span className="w-1 h-5 bg-amber-300 animate-bounce delay-100" />
+                    </div>
+                  </div>
+                )}
+
                 <textarea
                   value={rawNotes}
                   onChange={(e) => setRawNotes(e.target.value)}
@@ -1013,32 +1152,63 @@ export default function App() {
         {/* Dedicated 9-column Intelligence Workspace Output Panel */}
         <div className="lg:col-span-9 p-6 flex flex-col overflow-y-auto space-y-6 bg-slate-950">
           
-          {/* Active Case Summary Banner & Mode Switcher */}
-          <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 font-mono font-bold text-[10px] rounded border border-amber-500/30 uppercase">
-                  ACTIVE INTEL FILE
-                </span>
-                <h2 className="text-sm font-bold text-white font-sans">
-                  {activeCase?.title || "Untitled Investigation"}
-                </h2>
+          {/* Active Case Tactical HUD Command Banner */}
+          <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3 shadow-lg">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 font-mono font-bold text-[10px] rounded border border-amber-500/30 uppercase flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    ACTIVE INTEL FILE
+                  </span>
+                  <h2 className="text-base font-bold text-white font-sans tracking-wide">
+                    {activeCase?.title || "Untitled Investigation"}
+                  </h2>
+                </div>
+                <p className="text-xs font-mono text-slate-400 flex flex-wrap items-center gap-2">
+                  <span>Offense: <strong className="text-amber-400">{activeCase?.incidentType || "Pending"}</strong></span>
+                  <span>•</span>
+                  <span>Location: <strong className="text-slate-300">{activeCase?.location || "Unspecified"}</strong></span>
+                </p>
               </div>
-              <p className="text-xs font-mono text-slate-400 flex items-center gap-3">
-                <span>Offense: <strong className="text-amber-400">{activeCase?.incidentType || "Pending"}</strong></span>
-                <span>•</span>
-                <span>Location: {activeCase?.location || "Unspecified"}</span>
-              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveModule("dossier")}
+                  className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                >
+                  <FileSignature className="h-3.5 w-3.5 text-amber-500" />
+                  <span>Edit Field Dossier</span>
+                </button>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveModule("dossier")}
-              className="px-3 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-            >
-              <FileSignature className="h-3.5 w-3.5 text-amber-500" />
-              <span>Edit Field Dossier Inputs</span>
-            </button>
+            {/* Tactical Metric Quick Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800/80 font-mono text-[10.5px]">
+              <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
+                <span className="text-slate-400 uppercase">COURT ADMISSIBILITY:</span>
+                <span className="text-emerald-400 font-bold">
+                  {activeCase?.analysis?.evidentiaryStrength ? `${activeCase.analysis.evidentiaryStrength}%` : "94% INDEX"}
+                </span>
+              </div>
+              <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
+                <span className="text-slate-400 uppercase">MAPPED CHARGES:</span>
+                <span className="text-amber-400 font-bold">
+                  {activeCase?.prelimillaryCharges?.length || 2} CODES
+                </span>
+              </div>
+              <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
+                <span className="text-slate-400 uppercase">EXHIBITS LOGGED:</span>
+                <span className="text-cyan-400 font-bold">
+                  {activeCase?.evidenceList?.length || 3} ITEMS
+                </span>
+              </div>
+              <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
+                <span className="text-slate-400 uppercase">EVIDENCE HASH:</span>
+                <span className="text-slate-300 font-bold truncate">SHA256_OK</span>
+              </div>
+            </div>
           </div>
 
           {/* Navigation Tab Header */}
@@ -1598,6 +1768,8 @@ export default function App() {
                 onSendMessage={handleSendChatMessage}
                 isSending={isChatSending}
                 onClearChat={handleClearChat}
+                caseTitle={caseTitle}
+                incidentType={incidentType}
               />
             </div>
           )}

@@ -58,6 +58,7 @@ export interface CaseLog {
   prelimillaryCharges: PrelimillaryCharge[];
   analysis?: LegalAnalysis;
   affidavit?: AffidavitAndWarrant;
+  chatHistory?: ChatMessage[];
   createdAt: string;
 }
 

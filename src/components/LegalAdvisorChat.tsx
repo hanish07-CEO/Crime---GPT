@@ -7,6 +7,8 @@ interface LegalAdvisorChatProps {
   onSendMessage: (text: string) => Promise<void>;
   isSending: boolean;
   onClearChat: () => void;
+  caseTitle?: string;
+  incidentType?: string;
 }
 
 const PRESET_QUERIES = [
@@ -20,7 +22,9 @@ export default function LegalAdvisorChat({
   messages,
   onSendMessage,
   isSending,
-  onClearChat
+  onClearChat,
+  caseTitle,
+  incidentType
 }: LegalAdvisorChatProps) {
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,19 +48,31 @@ export default function LegalAdvisorChat({
   return (
     <div className="flex flex-col h-full bg-slate-950 border border-slate-900 rounded-lg overflow-hidden">
       {/* Header bar */}
-      <div className="bg-slate-900/60 p-4 border-b border-slate-900 flex items-center justify-between">
+      <div className="bg-slate-900/80 p-4 border-b border-slate-900 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Scale className="h-4 w-4 text-amber-500" />
-          <h2 className="text-sm font-semibold text-white font-sans">CrimeGPT AI Assistant</h2>
-          <span className="text-[9px] font-mono bg-amber-500/15 border border-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded">
-            LEGAL COUNCIL & PROCEDURAL BOT
-          </span>
+          <Scale className="h-4 w-4 text-amber-500 shrink-0" />
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-white font-sans">CrimeGPT AI Assistant</h2>
+              <span className="text-[9px] font-mono bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                ISOLATED CASE CHAT STREAM
+              </span>
+            </div>
+            {caseTitle && (
+              <p className="text-[11px] font-mono text-slate-400 mt-0.5 flex items-center gap-1.5">
+                <span>ACTIVE DOSSIER:</span>
+                <span className="text-amber-400 font-bold truncate max-w-xs">{caseTitle}</span>
+                {incidentType && <span className="text-slate-500">({incidentType})</span>}
+              </p>
+            )}
+          </div>
         </div>
         <button
           onClick={onClearChat}
-          className="text-[10px] text-slate-400 hover:text-white px-2 py-1 rounded bg-slate-800 hover:bg-slate-750 transition-colors border border-slate-800"
+          className="text-[10px] text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-750 transition-colors border border-slate-800 font-mono cursor-pointer"
         >
-          Clear Log
+          Clear Log For This Case
         </button>
       </div>
 

@@ -388,16 +388,20 @@ Please write a highly detailed, professional legal document. Return the response
  * Endpoint 4: Chat assistant for investigative or legal intelligence advice
  */
 app.post("/api/legal-advisor-chat", async (req, res) => {
-  const { messages } = req.body;
+  const { messages, caseTitle, incidentType, rawNotes } = req.body;
 
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "Messages array is required." });
   }
 
-  const systemInstruction = `You are CrimeGPT, an advanced Legal Intelligence and Investigative AI Assistant. 
+  let systemInstruction = `You are CrimeGPT, an advanced Legal Intelligence and Investigative AI Assistant. 
 You provide legal researchers, prosecutors, and detectives with references to standard criminal codes, criminal procedures (constitutional rights, Fourth/Fifth/Sixth Amendments, warrant guidelines), and investigative strategies.
 Always offer objective, highly factual legal intelligence. Frame your insights referencing common jurisdictional concepts, case law (like Terry v. Ohio, Miranda v. Arizona, Brady v. Maryland), and penal codes. 
 Maintain a sleek, formal, authoritative tone and format responses beautifully with clean lists and paragraphs. Do not provide certified personal legal counsel, add a boilerplate notice that you are an investigative intelligence tool.`;
+
+  if (caseTitle) {
+    systemInstruction += `\n\n[ACTIVE CASE DOSSIER CONTEXT]\nCase Title: ${caseTitle}\nIncident Offense: ${incidentType || "Unspecified"}\nField Notes Summary: ${rawNotes ? rawNotes.substring(0, 500) : "N/A"}`;
+  }
 
   const chatMessages = messages.map(msg => ({
     role: msg.role === "user" ? "user" : "model",
