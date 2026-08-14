@@ -11,6 +11,7 @@
         "badgeNumber": { "type": "string" },
         "department": { "type": "string" },
         "clearanceLevel": { "type": "string" },
+        "role": { "type": "string" },
         "createdAt": { "type": "string" },
         "updatedAt": { "type": "string" }
       },
@@ -18,21 +19,38 @@
     },
     "cases": {
       "title": "Cases",
-      "description": "Criminal investigation case dossiers",
+      "description": "Criminal investigation and cyber crime case dossiers",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
         "uid": { "type": "string" },
         "title": { "type": "string" },
         "incidentType": { "type": "string" },
-        "timestamp": { "type": "string" },
+        "category": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed"] },
+        "completedAt": { "type": "string" },
+        "priority": { "type": "string" },
+        "assignedOfficer": { "type": "string" },
+        "badgeNumber": { "type": "string" },
+        "date": { "type": "string" },
         "location": { "type": "string" },
         "rawNotes": { "type": "string" },
+        "synopsis": { "type": "string" },
         "narrative": { "type": "string" },
         "createdAt": { "type": "string" },
         "updatedAt": { "type": "string" }
       },
       "required": ["uid", "title"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "Stores officer profile details"
+    },
+    "/cases/{caseId}": {
+      "schema": "cases",
+      "description": "Stores investigation dossiers and case history records"
     }
   }
 }

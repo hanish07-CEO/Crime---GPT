@@ -1,3 +1,6 @@
+export type CaseStatus = "pending" | "completed";
+export type CaseCategory = "Cyber Crime" | "Financial Fraud" | "Commercial Burglary" | "Narcotics & Contraband" | "Violent Crimes" | "Other";
+
 export interface TimelineNode {
   time: string;
   event: string;
@@ -45,10 +48,17 @@ export interface AffidavitAndWarrant {
 
 export interface CaseLog {
   id: string;
+  uid?: string;
   title: string;
   date: string;
   location: string;
   incidentType: string;
+  category?: CaseCategory | string;
+  status?: CaseStatus; // "pending" | "completed"
+  completedAt?: string; // ISO date string when case was resolved / completed
+  priority?: "Critical" | "High" | "Medium" | "Low";
+  assignedOfficer?: string;
+  badgeNumber?: string;
   rawNotes: string;
   synopsis: string;
   narrative: string;
@@ -60,6 +70,7 @@ export interface CaseLog {
   affidavit?: AffidavitAndWarrant;
   chatHistory?: ChatMessage[];
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface ChatMessage {

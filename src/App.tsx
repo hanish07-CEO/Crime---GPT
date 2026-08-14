@@ -27,7 +27,8 @@ import {
   Building,
   BadgeCheck,
   Database,
-  ArrowRight
+  ArrowRight,
+  Clock
 } from "lucide-react";
 
 import { CASE_TEMPLATES, CaseTemplate } from "./components/CaseTemplates";
@@ -37,7 +38,7 @@ import LegalAdvisorChat from "./components/LegalAdvisorChat";
 import SolutionDocument from "./components/SolutionDocument";
 import LoginPage from "./components/LoginPage";
 import ModuleNavigation from "./components/ModuleNavigation";
-import { CaseLog, ChatMessage, TimelineNode, EvidenceItem, PrelimillaryCharge, LegalAnalysis, AffidavitAndWarrant } from "./types";
+import { CaseLog, ChatMessage, TimelineNode, EvidenceItem, PrelimillaryCharge, LegalAnalysis, AffidavitAndWarrant, CaseStatus, CaseCategory } from "./types";
 import { auth, db, signOut } from "./lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
@@ -143,10 +144,11 @@ FIELD TRANSCRIPT & OBSERVATIONS:
           } else {
             profile = {
               uid: currentUser.uid,
-              email: currentUser.email || "officer@gujaratpolice.gov.in",
+              email: currentUser.email || "inspector.jadeja@gujaratpolice.gov.in",
               displayName: currentUser.displayName || "Inspector R.K. Jadeja",
               badgeNumber: "AHM-2024-IO-047",
               department: "Gujarat Police Cyber Crime Branch - Ahmedabad",
+              role: "Lead Investigating Officer (Cyber Operations)",
               clearanceLevel: "Level 4 - Top Secret / CJIS",
               createdAt: new Date().toISOString()
             };
@@ -166,6 +168,18 @@ FIELD TRANSCRIPT & OBSERVATIONS:
             setCases(firestoreCases);
             setSelectedCaseId(firestoreCases[0].id);
             loadCaseIntoForm(firestoreCases[0]);
+          } else {
+            // Seed new user account with cyber crime templates and monthly completed records
+            const seeded = buildDefaultCases(currentUser.uid);
+            setCases(seeded);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(seeded));
+            setSelectedCaseId(seeded[0].id);
+            loadCaseIntoForm(seeded[0]);
+
+            // Persist seeded cases to Firestore
+            for (const c of seeded) {
+              setDoc(doc(db, "cases", c.id), { ...c, uid: currentUser.uid, updatedAt: new Date().toISOString() }).catch(() => {});
+            }
           }
         } catch (err) {
           console.warn("Firestore sync error:", err);
@@ -178,16 +192,62 @@ FIELD TRANSCRIPT & OBSERVATIONS:
     return () => unsubscribe();
   }, []);
 
+  const buildDefaultCases = (userUid?: string): CaseLog[] => {
+    return CASE_TEMPLATES.map((t, idx) => ({
+      id: `case-vault-${idx + 1}`,
+      uid: userUid,
+      title: t.title,
+      incidentType: t.incidentType,
+      category: t.category,
+      status: t.status,
+      completedAt: t.completedAt || (t.status === "completed" ? "2026-08-08T16:45:00Z" : undefined),
+      priority: t.priority,
+      assignedOfficer: t.assignedOfficer,
+      badgeNumber: t.badgeNumber,
+      date: t.date,
+      location: t.location,
+      rawNotes: t.rawNotes,
+      synopsis: t.status === "completed"
+        ? `Comprehensive investigation completed this month. Suspects tracked, assets frozen, and formal prosecution docket closed.`
+        : "Securing primary forensic artifacts, network transcripts, and digital evidence logs.",
+      narrative: t.status === "completed"
+        ? `INVESTIGATION RESOLUTION SUMMARY:\n\n${t.rawNotes}\n\nCase successfully completed this month and verified under Cyber Crime Cell statutory guidelines.`
+        : `INCIDENT NARRATIVE SUMMARY:\n\n${t.rawNotes}`,
+      timeline: [
+        { time: t.date.split(" at ")[1] || "04:15 AM", event: "Incident detected & emergency dispatch initiated." },
+        { time: "+45 mins", event: "Cyber Crime Cell mobilized forensic team to scene." }
+      ],
+      suspectDescription: t.status === "completed" ? "Syndicate apprehended and booked." : "Offshore IP / local syndicate under active surveillance.",
+      evidenceList: [
+        { item: "Forensic Digital Disk & RAM Dump Image", locationFound: t.location, legalStatus: "Chain of Custody Verified" },
+        { item: "IP Routing & Network Packet Logs", locationFound: "Cyber Forensics Unit", legalStatus: "Admissible under Sec 65B BSA" }
+      ],
+      prelimillaryCharges: [
+        { chargeName: "Information Technology Act Sec 66/66D", suggestedCode: "IT Act 2000", explanation: "Identity theft and cheating by personation using computer resource." },
+        { chargeName: "Bharatiya Nyaya Sanhita Sec 318(4)", suggestedCode: "BNS 2023", explanation: "Cheating and dishonestly inducing delivery of property." }
+      ],
+      chatHistory: [],
+      createdAt: new Date().toISOString()
+    }));
+  };
+
   // Load existing cases or initialize with templates on first start
   useEffect(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.length > 0) {
-          setCases(parsed);
-          setSelectedCaseId(parsed[0].id);
-          loadCaseIntoForm(parsed[0]);
+        if (parsed && Array.isArray(parsed) && parsed.length > 0) {
+          // Merge any newly introduced templates (e.g. solved cases) that aren't in local storage yet
+          const defaultCases = buildDefaultCases();
+          const existingTitles = new Set(parsed.map((p: CaseLog) => (p.title || "").toLowerCase().trim()));
+          const missingDefaults = defaultCases.filter(d => !existingTitles.has((d.title || "").toLowerCase().trim()));
+          const merged = [...parsed, ...missingDefaults];
+
+          setCases(merged);
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
+          setSelectedCaseId(merged[0].id);
+          loadCaseIntoForm(merged[0]);
         } else {
           initializeDefault();
         }
@@ -197,29 +257,10 @@ FIELD TRANSCRIPT & OBSERVATIONS:
     } else {
       initializeDefault();
     }
-
-    // Load initial cases or initialize
   }, []);
 
   const initializeDefault = () => {
-    // Populate templates as first-time case logs with isolated chat logs
-    const initialCases: CaseLog[] = CASE_TEMPLATES.map((t, idx) => ({
-      id: `template-${idx}-${Date.now()}`,
-      title: t.title,
-      incidentType: t.incidentType,
-      date: t.date,
-      location: t.location,
-      rawNotes: t.rawNotes,
-      synopsis: "Securing primary facts of report to generate diagnostic intelligence pipeline.",
-      narrative: `SUMMARY OF INCIDENT:\n\nThis draft case contains investigator field transcripts. Click upper 'Generate Incident Report' to parse raw notes using Gemini 3.5 AI.`,
-      timeline: [],
-      suspectDescription: "Pending analysis",
-      evidenceList: [],
-      prelimillaryCharges: [],
-      chatHistory: [],
-      createdAt: new Date().toISOString()
-    }));
-
+    const initialCases = buildDefaultCases();
     setCases(initialCases);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialCases));
     setSelectedCaseId(initialCases[0].id);
@@ -237,8 +278,46 @@ FIELD TRANSCRIPT & OBSERVATIONS:
     
     // Default or restore Affidavit state
     setTargetCharge(c.prelimillaryCharges?.[0]?.chargeName || c.incidentType || "");
-    if (!affiantName) setAffiantName("Detective Jane Miller");
-    if (!affiantBadge) setAffiantBadge("DS-2948");
+    if (!affiantName) setAffiantName("Inspector R.K. Jadeja");
+    if (!affiantBadge) setAffiantBadge("AHM-2024-IO-047");
+  };
+
+  // Toggle case between Pending and Completed (This Month)
+  const handleToggleCaseStatus = async (id: string, newStatus: CaseStatus) => {
+    const now = new Date().toISOString();
+    const updated = cases.map((c) => {
+      if (c.id === id) {
+        return {
+          ...c,
+          status: newStatus,
+          completedAt: newStatus === "completed" ? now : undefined,
+          updatedAt: now
+        };
+      }
+      return c;
+    });
+    setCases(updated);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+
+    const target = updated.find(c => c.id === id);
+    if (userProfile && target) {
+      try {
+        const caseRef = doc(db, "cases", id);
+        await setDoc(caseRef, {
+          ...target,
+          uid: userProfile.uid,
+          updatedAt: now
+        }, { merge: true });
+      } catch (err) {
+        console.warn("Firestore status sync error:", err);
+      }
+    }
+
+    if (newStatus === "completed") {
+      showToast(`Case marked as COMPLETED this month!`, "success");
+    } else {
+      showToast(`Case reopened as PENDING investigation`, "info");
+    }
   };
 
   // Save current form inputs and chat messages to active Case record
@@ -319,8 +398,13 @@ FIELD TRANSCRIPT & OBSERVATIONS:
 
     const newCase: CaseLog = {
       id: `case-${Date.now()}`,
-      title: "New Investigation Draft",
-      incidentType: "To Be Determined",
+      title: "New Cyber Investigation Draft",
+      incidentType: "Cyber Financial Fraud / Unauthorized Access",
+      category: "Cyber Crime",
+      status: "pending",
+      priority: "High",
+      assignedOfficer: userProfile?.displayName || "Inspector R.K. Jadeja",
+      badgeNumber: userProfile?.badgeNumber || "AHM-2024-IO-047",
       date: new Date().toLocaleDateString("en-US") + " " + new Date().toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' }),
       location: "",
       rawNotes: "",
@@ -877,6 +961,7 @@ FIELD TRANSCRIPT & OBSERVATIONS:
               activeId={selectedCaseId}
               onSelect={handleSelectCase}
               onDelete={handleDeleteCase}
+              onToggleStatus={handleToggleCaseStatus}
             />
             
             {/* Inner template loader helper */}
@@ -1127,6 +1212,7 @@ FIELD TRANSCRIPT & OBSERVATIONS:
             activeId={selectedCaseId}
             onSelect={handleSelectCase}
             onDelete={handleDeleteCase}
+            onToggleStatus={handleToggleCaseStatus}
           />
           
           {/* Inner template loader helper */}
@@ -1156,23 +1242,73 @@ FIELD TRANSCRIPT & OBSERVATIONS:
           <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3 shadow-lg">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 font-mono font-bold text-[10px] rounded border border-amber-500/30 uppercase flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                     ACTIVE INTEL FILE
                   </span>
-                  <h2 className="text-base font-bold text-white font-sans tracking-wide">
-                    {activeCase?.title || "Untitled Investigation"}
-                  </h2>
+
+                  {/* Cyber Crime / Category Badge */}
+                  <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 font-mono font-semibold text-[10px] rounded border border-cyan-500/30 uppercase">
+                    {activeCase?.category || "Cyber Crime"}
+                  </span>
+
+                  {/* Status Badge */}
+                  {activeCase?.status === "completed" ? (
+                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px] rounded border border-emerald-500/40 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                      COMPLETED THIS MONTH
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 font-mono font-bold text-[10px] rounded border border-amber-500/30 flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-amber-400 animate-pulse" />
+                      PENDING INVESTIGATION
+                    </span>
+                  )}
                 </div>
+
+                <h2 className="text-base font-bold text-white font-sans tracking-wide">
+                  {activeCase?.title || "Untitled Investigation"}
+                </h2>
+
                 <p className="text-xs font-mono text-slate-400 flex flex-wrap items-center gap-2">
                   <span>Offense: <strong className="text-amber-400">{activeCase?.incidentType || "Pending"}</strong></span>
                   <span>•</span>
                   <span>Location: <strong className="text-slate-300">{activeCase?.location || "Unspecified"}</strong></span>
+                  <span>•</span>
+                  <span>Officer: <strong className="text-cyan-400">{activeCase?.assignedOfficer || "Inspector R.K. Jadeja"} ({activeCase?.badgeNumber || "AHM-2024-IO-047"})</strong></span>
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
+                {/* One-click Status Toggle Button */}
+                {activeCase && (
+                  <button
+                    type="button"
+                    onClick={() => handleToggleCaseStatus(
+                      activeCase.id,
+                      activeCase.status === "completed" ? "pending" : "completed"
+                    )}
+                    className={`px-3 py-1.5 font-mono text-xs font-semibold rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                      activeCase.status === "completed"
+                        ? "bg-slate-900 hover:bg-slate-800 text-amber-300 border-amber-500/40"
+                        : "bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-500/50"
+                    }`}
+                  >
+                    {activeCase.status === "completed" ? (
+                      <>
+                        <Clock className="h-3.5 w-3.5 text-amber-400" />
+                        <span>Reopen as Pending</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Mark Completed This Month</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setActiveModule("dossier")}
@@ -1205,8 +1341,10 @@ FIELD TRANSCRIPT & OBSERVATIONS:
                 </span>
               </div>
               <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
-                <span className="text-slate-400 uppercase">EVIDENCE HASH:</span>
-                <span className="text-slate-300 font-bold truncate">SHA256_OK</span>
+                <span className="text-slate-400 uppercase">CASE STATUS:</span>
+                <span className={`font-bold uppercase ${activeCase?.status === "completed" ? "text-emerald-400" : "text-amber-400"}`}>
+                  {activeCase?.status === "completed" ? "RESOLVED (AUG 2026)" : "PENDING ACTIVE"}
+                </span>
               </div>
             </div>
           </div>
