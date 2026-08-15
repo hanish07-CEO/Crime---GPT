@@ -18,6 +18,7 @@ import {
   Trash2,
   ClipboardCheck,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   Info,
   ExternalLink,
@@ -28,7 +29,8 @@ import {
   BadgeCheck,
   Database,
   ArrowRight,
-  Clock
+  Clock,
+  FolderOpen
 } from "lucide-react";
 
 import { CASE_TEMPLATES, CaseTemplate } from "./components/CaseTemplates";
@@ -127,6 +129,10 @@ FIELD TRANSCRIPT & OBSERVATIONS:
   // Chat Log State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatSending, setIsChatSending] = useState(false);
+
+  // Collapsible Template Panels
+  const [showTemplatesDossier, setShowTemplatesDossier] = useState(false);
+  const [showTemplatesWorkspace, setShowTemplatesWorkspace] = useState(false);
 
   // Success/Notification states
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
@@ -946,16 +952,16 @@ FIELD TRANSCRIPT & OBSERVATIONS:
 
       {/* MODULE 4: SOLUTION DOCUMENT PROPOSAL & ROADMAP */}
       {activeModule === "solutionDocument" && (
-        <div className="flex-1 bg-slate-950 overflow-y-auto p-4 sm:p-6">
+        <div className="flex-1 bg-slate-950 overflow-y-auto min-h-0 p-4 sm:p-6 tactical-scrollbar">
           <SolutionDocument onCopy={copyToClipboard} />
         </div>
       )}
 
       {/* MODULE 2: INCIDENT DOSSIER (FIELD DATA ENTRY & INTAKE) */}
       {userProfile && activeModule === "dossier" && (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-950">
-          {/* Left Sidebar: Internal Case History (3 cols) */}
-          <div className="lg:col-span-3 border-r border-slate-900 bg-slate-950 flex flex-col">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 bg-slate-950">
+          {/* Left Sidebar: Internal Case History (4 cols) */}
+          <div className="lg:col-span-4 border-r border-slate-900 bg-slate-950 flex flex-col">
             <CaseHistory
               cases={cases}
               activeId={selectedCaseId}
@@ -964,28 +970,45 @@ FIELD TRANSCRIPT & OBSERVATIONS:
               onToggleStatus={handleToggleCaseStatus}
             />
             
-            {/* Inner template loader helper */}
-            <div className="p-4 border-t border-slate-900 bg-slate-950/50">
-              <h4 className="text-[10px] font-mono tracking-wider text-slate-500 uppercase mb-2">
-                Apply Ready Case Files
-              </h4>
-              <div className="grid grid-cols-1 gap-1.5">
-                {CASE_TEMPLATES.map((tpl, i) => (
-                  <button
-                    key={i}
-                    onClick={() => applyTemplate(tpl)}
-                    className="w-full text-left bg-slate-900/50 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 p-2 rounded transition-colors text-[11px] text-slate-300 flex items-center justify-between group cursor-pointer"
-                  >
-                    <span className="truncate">{tpl.title}</span>
-                    <Plus className="h-3.5 w-3.5 text-slate-500 group-hover:text-amber-500 shrink-0 ml-1.5" />
-                  </button>
-                ))}
-              </div>
+            {/* Collapsible template loader drawer */}
+            <div className="border-t border-slate-900 bg-slate-950/80 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowTemplatesDossier(!showTemplatesDossier)}
+                className="w-full p-2 flex items-center justify-between text-[10px] font-mono font-bold tracking-wider text-slate-400 hover:text-amber-400 bg-slate-900/40 hover:bg-slate-900 transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-1.5 truncate">
+                  <FolderOpen className="h-3 w-3 text-amber-500 shrink-0" />
+                  <span>PRESET CASE TEMPLATES ({CASE_TEMPLATES.length})</span>
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-500 transition-transform shrink-0 ${showTemplatesDossier ? "rotate-180 text-amber-400" : ""}`} />
+              </button>
+
+              {showTemplatesDossier && (
+                <div className="p-2 border-t border-slate-900/80 max-h-44 overflow-y-auto divide-y divide-slate-900/80 custom-scrollbar space-y-1">
+                  {CASE_TEMPLATES.map((tpl, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        applyTemplate(tpl);
+                        setShowTemplatesDossier(false);
+                      }}
+                      className="w-full text-left bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-amber-500/50 p-1.5 rounded transition-colors text-[10.5px] text-slate-300 flex items-center justify-between group cursor-pointer"
+                    >
+                      <div className="min-w-0 pr-1">
+                        <p className="truncate font-medium group-hover:text-amber-300">{tpl.title}</p>
+                        <p className="text-[8.5px] text-slate-500 font-mono truncate">{tpl.category || "General"} • {tpl.status === "completed" ? "Solved" : "Pending"}</p>
+                      </div>
+                      <Plus className="h-3 w-3 text-slate-500 group-hover:text-amber-500 shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Main 9-column Case Field Dossier Form */}
-          <div className="lg:col-span-9 p-6 flex flex-col overflow-y-auto space-y-6 bg-slate-950">
+          {/* Main 8-column Case Field Dossier Form */}
+          <div className="lg:col-span-8 p-6 flex flex-col space-y-6 bg-slate-950">
             {/* Header with Quick Actions */}
             <div className="flex flex-wrap items-center justify-between pb-4 border-b border-slate-900 gap-3">
               <div className="flex items-center gap-2">
@@ -1203,10 +1226,10 @@ FIELD TRANSCRIPT & OBSERVATIONS:
 
       {/* MODULE 3: INTEL WORKSPACE (AI ANALYSIS & LEGAL DOCUMENTS) */}
       {userProfile && activeModule === "workspace" && (
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-950">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 bg-slate-950">
         
-        {/* Left Sidebar: Internal Case History (3 cols) */}
-        <div className="lg:col-span-3 border-r border-slate-900 bg-slate-950 flex flex-col">
+        {/* Left Sidebar: Internal Case History (4 cols) */}
+        <div className="lg:col-span-4 border-r border-slate-900 bg-slate-950 flex flex-col">
           <CaseHistory
             cases={cases}
             activeId={selectedCaseId}
@@ -1215,28 +1238,45 @@ FIELD TRANSCRIPT & OBSERVATIONS:
             onToggleStatus={handleToggleCaseStatus}
           />
           
-          {/* Inner template loader helper */}
-          <div className="p-4 border-t border-slate-900 bg-slate-950/50">
-            <h4 className="text-[10px] font-mono tracking-wider text-slate-500 uppercase mb-2">
-              Apply Ready Case Files
-            </h4>
-            <div className="grid grid-cols-1 gap-1.5">
-              {CASE_TEMPLATES.map((tpl, i) => (
-                <button
-                  key={i}
-                  onClick={() => applyTemplate(tpl)}
-                  className="w-full text-left bg-slate-900/50 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 p-2 rounded transition-colors text-[11px] text-slate-300 flex items-center justify-between group cursor-pointer"
-                >
-                  <span className="truncate">{tpl.title}</span>
-                  <Plus className="h-3.5 w-3.5 text-slate-500 group-hover:text-amber-500 shrink-0 ml-1.5" />
-                </button>
-              ))}
-            </div>
+          {/* Collapsible template loader drawer */}
+          <div className="border-t border-slate-900 bg-slate-950/80 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowTemplatesWorkspace(!showTemplatesWorkspace)}
+              className="w-full p-2 flex items-center justify-between text-[10px] font-mono font-bold tracking-wider text-slate-400 hover:text-amber-400 bg-slate-900/40 hover:bg-slate-900 transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5 truncate">
+                <FolderOpen className="h-3 w-3 text-amber-500 shrink-0" />
+                <span>PRESET CASE TEMPLATES ({CASE_TEMPLATES.length})</span>
+              </span>
+              <ChevronDown className={`h-3.5 w-3.5 text-slate-500 transition-transform shrink-0 ${showTemplatesWorkspace ? "rotate-180 text-amber-400" : ""}`} />
+            </button>
+
+            {showTemplatesWorkspace && (
+              <div className="p-2 border-t border-slate-900/80 max-h-44 overflow-y-auto divide-y divide-slate-900/80 custom-scrollbar space-y-1">
+                {CASE_TEMPLATES.map((tpl, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      applyTemplate(tpl);
+                      setShowTemplatesWorkspace(false);
+                    }}
+                    className="w-full text-left bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 hover:border-amber-500/50 p-1.5 rounded transition-colors text-[10.5px] text-slate-300 flex items-center justify-between group cursor-pointer"
+                  >
+                    <div className="min-w-0 pr-1">
+                      <p className="truncate font-medium group-hover:text-amber-300">{tpl.title}</p>
+                      <p className="text-[8.5px] text-slate-500 font-mono truncate">{tpl.category || "General"} • {tpl.status === "completed" ? "Solved" : "Pending"}</p>
+                    </div>
+                    <Plus className="h-3 w-3 text-slate-500 group-hover:text-amber-500 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Dedicated 9-column Intelligence Workspace Output Panel */}
-        <div className="lg:col-span-9 p-6 flex flex-col overflow-y-auto space-y-6 bg-slate-950">
+        {/* Dedicated 8-column Intelligence Workspace Output Panel */}
+        <div className="lg:col-span-8 p-6 flex flex-col space-y-6 bg-slate-950">
           
           {/* Active Case Tactical HUD Command Banner */}
           <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3 shadow-lg">

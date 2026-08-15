@@ -55,6 +55,29 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #334155;
   }
+
+  /* High-Visibility Tactical Scrollbar */
+  .tactical-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #334155 #0b1120;
+  }
+  .tactical-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .tactical-scrollbar::-webkit-scrollbar-track {
+    background: #090d16;
+    border-left: 1px solid rgba(30, 41, 59, 0.5);
+  }
+  .tactical-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+  }
+  .tactical-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+    border-color: rgba(245, 158, 11, 0.6);
+  }
 }
 
 /* Police Beacon Strobes (Red & Green) */
