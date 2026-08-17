@@ -397,6 +397,44 @@ FIELD TRANSCRIPT & OBSERVATIONS:
     }
   };
 
+  // Handle login success and immediately prompt for case selection on mobile
+  const handleLoginSuccess = (profile: any) => {
+    setUserProfile(profile);
+    setShowLoginModal(false);
+    setActiveModule("dossier");
+    
+    // Check if on mobile: automatically ask officer to pick up a case to open
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    if (isMobile) {
+      setShowMobileCaseVault(true);
+      showToast(`Welcome ${profile.displayName || "Officer"}. Please pick up an investigation case to open.`, "info");
+    } else {
+      showToast("Officer authenticated & connected to CrimeGPT database", "success");
+    }
+  };
+
+  const handleGuestLogin = () => {
+    const guestProfile = {
+      uid: "guest_" + Date.now(),
+      email: "officer.guest@gujaratpolice.gov.in",
+      displayName: "Inspector Guest (Demo Mode)",
+      badgeNumber: "AHM-GUEST-01",
+      department: "Gujarat Police Cyber Crime Branch - Ahmedabad",
+      clearanceLevel: "Level 3 - Guest Clearance",
+    };
+    setUserProfile(guestProfile);
+    setShowLoginModal(false);
+    setActiveModule("dossier");
+    
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    if (isMobile) {
+      setShowMobileCaseVault(true);
+      showToast("Logged in as Guest Officer. Please pick up an investigation case to open.", "info");
+    } else {
+      showToast("Authenticated in Guest / Demo Mode", "success");
+    }
+  };
+
   // Create new empty case with its own dedicated separate chat log
   const handleCreateNewCase = () => {
     // save old current first
@@ -882,26 +920,8 @@ FIELD TRANSCRIPT & OBSERVATIONS:
             </button>
             <LoginPage
               userProfile={userProfile}
-              onLoginSuccess={(profile) => {
-                setUserProfile(profile);
-                setShowLoginModal(false);
-                setActiveModule("dossier");
-                showToast("Officer authenticated & connected to CrimeGPT database", "success");
-              }}
-              onContinueAsGuest={() => {
-                const guestProfile = {
-                  uid: "guest_" + Date.now(),
-                  email: "officer.guest@gujaratpolice.gov.in",
-                  displayName: "Inspector Guest (Demo Mode)",
-                  badgeNumber: "AHM-GUEST-01",
-                  department: "Gujarat Police Cyber Crime Branch - Ahmedabad",
-                  clearanceLevel: "Level 3 - Guest Clearance",
-                };
-                setUserProfile(guestProfile);
-                setShowLoginModal(false);
-                setActiveModule("dossier");
-                showToast("Authenticated in Guest / Demo Mode", "success");
-              }}
+              onLoginSuccess={handleLoginSuccess}
+              onContinueAsGuest={handleGuestLogin}
               onSignOut={async () => {
                 await signOut(auth);
                 setUserProfile(null);
@@ -918,24 +938,8 @@ FIELD TRANSCRIPT & OBSERVATIONS:
         <div className="flex-1 bg-slate-950 overflow-y-auto">
           <LoginPage
             userProfile={userProfile}
-            onLoginSuccess={(profile) => {
-              setUserProfile(profile);
-              setActiveModule("dossier");
-              showToast("Officer authenticated & connected to CrimeGPT database", "success");
-            }}
-            onContinueAsGuest={() => {
-              const guestProfile = {
-                uid: "guest_" + Date.now(),
-                email: "officer.guest@gujaratpolice.gov.in",
-                displayName: "Inspector Guest (Demo Mode)",
-                badgeNumber: "AHM-GUEST-01",
-                department: "Gujarat Police Cyber Crime Branch - Ahmedabad",
-                clearanceLevel: "Level 3 - Guest Clearance",
-              };
-              setUserProfile(guestProfile);
-              setActiveModule("dossier");
-              showToast("Authenticated in Guest / Demo Mode", "success");
-            }}
+            onLoginSuccess={handleLoginSuccess}
+            onContinueAsGuest={handleGuestLogin}
             onSignOut={async () => {
               try {
                 await signOut(auth);
@@ -2005,19 +2009,27 @@ FIELD TRANSCRIPT & OBSERVATIONS:
           <div className="bg-slate-950 border border-amber-500/40 rounded-t-2xl sm:rounded-2xl max-w-2xl w-full mx-auto max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="bg-slate-900 p-3.5 sm:p-4 border-b border-slate-800 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400">
                   <FolderOpen className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-xs sm:text-sm font-bold text-white font-mono uppercase">CASE VAULT &amp; REGISTRY</h2>
-                  <p className="text-[10px] sm:text-[11px] text-slate-400 font-mono">Select any existing case or open a new investigation</p>
+                  <div className="flex items-center gap-1.5">
+                    <h2 className="text-xs sm:text-sm font-bold text-white font-mono uppercase">PICK UP AN INVESTIGATION CASE</h2>
+                    <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 uppercase">
+                      READY
+                    </span>
+                  </div>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 font-mono">
+                    {userProfile ? `Officer ${userProfile.displayName || "IO"} • Select a case to open` : "Select an existing case or create a new investigation file"}
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowMobileCaseVault(false)}
                 className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700 cursor-pointer"
+                title="Close and view active case"
               >
                 <X className="h-4 w-4" />
               </button>

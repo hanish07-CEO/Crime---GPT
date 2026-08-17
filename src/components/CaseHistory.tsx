@@ -82,7 +82,7 @@ export default function CaseHistory({
 
   const scrollToActiveCase = () => {
     if (activeCaseRef.current) {
-      activeCaseRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      activeCaseRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
 

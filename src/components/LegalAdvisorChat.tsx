@@ -27,10 +27,13 @@ export default function LegalAdvisorChat({
   incidentType
 }: LegalAdvisorChatProps) {
   const [inputText, setInputText] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Only scroll the internal chat container, never scroll the outer window
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages, isSending]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -96,7 +99,7 @@ export default function LegalAdvisorChat({
       </div>
 
       {/* Message Feed */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3.5 min-h-0 tactical-scrollbar">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3.5 min-h-0 tactical-scrollbar">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-3 sm:p-6 space-y-3.5">
             <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl">
@@ -162,7 +165,6 @@ export default function LegalAdvisorChat({
             <span className="text-[11px] sm:text-xs font-mono text-slate-400">CrimeGPT is analyzing legal statutes...</span>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Form */}
