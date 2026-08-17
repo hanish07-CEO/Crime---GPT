@@ -207,7 +207,7 @@ export default function LoginPage({
   };
 
   return (
-    <div className="h-screen max-h-screen w-full bg-[#040711] text-slate-100 flex items-center justify-center p-5 sm:p-8 lg:p-12 relative font-sans overflow-hidden select-none">
+    <div className="min-h-screen lg:h-screen lg:max-h-screen w-full bg-[#040711] text-slate-100 flex items-center justify-center p-3 sm:p-6 lg:p-12 relative font-sans overflow-y-auto lg:overflow-hidden select-none">
       
       {/* 1. Cyber Crime Scene Background with Cyber Hacker */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">

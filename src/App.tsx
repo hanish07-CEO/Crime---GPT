@@ -1008,45 +1008,45 @@ FIELD TRANSCRIPT & OBSERVATIONS:
           </div>
 
           {/* Main 8-column Case Field Dossier Form */}
-          <div className="lg:col-span-8 p-6 flex flex-col space-y-6 bg-slate-950">
+          <div className="lg:col-span-8 p-3.5 sm:p-6 flex flex-col space-y-4 sm:space-y-6 bg-slate-950">
             {/* Header with Quick Actions */}
-            <div className="flex flex-wrap items-center justify-between pb-4 border-b border-slate-900 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 sm:pb-4 border-b border-slate-900 gap-3">
               <div className="flex items-center gap-2">
-                <FileSignature className="h-5 w-5 text-amber-500" />
+                <FileSignature className="h-5 w-5 text-amber-500 shrink-0" />
                 <div>
-                  <h2 className="text-sm font-bold font-mono tracking-wider uppercase text-slate-200">
+                  <h2 className="text-xs sm:text-sm font-bold font-mono tracking-wider uppercase text-slate-200">
                     INCIDENT DOSSIER // FIELD RECORD DATA ENTRY
                   </h2>
-                  <p className="text-[11px] text-slate-500 font-mono">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 font-mono">
                     Input raw wiretap logs, field notes, and incident parameters for AI parsing
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={handleCreateNewCase}
-                  className="px-3 py-1.5 text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="px-2.5 sm:px-3 py-1.5 text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
-                  <Plus className="h-3.5 w-3.5" /> New Case
+                  <Plus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">New Case</span><span className="sm:hidden">New</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={(e) => handleDeleteCase(selectedCaseId, e)}
-                  className="px-3 py-1.5 text-xs font-mono font-semibold bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="px-2.5 sm:px-3 py-1.5 text-xs font-mono font-semibold bg-red-500/10 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                   title="Permanently purge active case file"
                 >
-                  <Trash2 className="h-3.5 w-3.5" /> Purge Case File
+                  <Trash2 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Purge Case File</span><span className="sm:hidden">Purge</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveModule("workspace")}
-                  className="px-3 py-1.5 text-xs font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="px-2.5 sm:px-3 py-1.5 text-xs font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm ml-auto sm:ml-0"
                 >
-                  <span>Open Intel Workspace</span>
+                  <span>Intel Workspace</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -1276,51 +1276,51 @@ FIELD TRANSCRIPT & OBSERVATIONS:
         </div>
 
         {/* Dedicated 8-column Intelligence Workspace Output Panel */}
-        <div className="lg:col-span-8 p-6 flex flex-col space-y-6 bg-slate-950">
+        <div className="lg:col-span-8 p-3.5 sm:p-6 flex flex-col space-y-4 sm:space-y-6 bg-slate-950">
           
           {/* Active Case Tactical HUD Command Banner */}
-          <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3 shadow-lg">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-slate-900/90 p-3 sm:p-4 rounded-xl border border-slate-800 space-y-2.5 sm:space-y-3 shadow-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 font-mono font-bold text-[10px] rounded border border-amber-500/30 uppercase flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <span className="px-2 py-0.5 bg-amber-500/20 text-amber-400 font-mono font-bold text-[9.5px] sm:text-[10px] rounded border border-amber-500/30 uppercase flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    ACTIVE INTEL FILE
+                    ACTIVE INTEL
                   </span>
 
                   {/* Cyber Crime / Category Badge */}
-                  <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 font-mono font-semibold text-[10px] rounded border border-cyan-500/30 uppercase">
+                  <span className="px-2 py-0.5 bg-cyan-500/10 text-cyan-400 font-mono font-semibold text-[9.5px] sm:text-[10px] rounded border border-cyan-500/30 uppercase">
                     {activeCase?.category || "Cyber Crime"}
                   </span>
 
                   {/* Status Badge */}
                   {activeCase?.status === "completed" ? (
-                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px] rounded border border-emerald-500/40 flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[9.5px] sm:text-[10px] rounded border border-emerald-500/40 flex items-center gap-1">
                       <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                      COMPLETED THIS MONTH
+                      COMPLETED (AUG 2026)
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 font-mono font-bold text-[10px] rounded border border-amber-500/30 flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 font-mono font-bold text-[9.5px] sm:text-[10px] rounded border border-amber-500/30 flex items-center gap-1">
                       <Clock className="h-3 w-3 text-amber-400 animate-pulse" />
-                      PENDING INVESTIGATION
+                      PENDING ACTIVE
                     </span>
                   )}
                 </div>
 
-                <h2 className="text-base font-bold text-white font-sans tracking-wide">
+                <h2 className="text-sm sm:text-base font-bold text-white font-sans tracking-wide">
                   {activeCase?.title || "Untitled Investigation"}
                 </h2>
 
-                <p className="text-xs font-mono text-slate-400 flex flex-wrap items-center gap-2">
+                <p className="text-[11px] sm:text-xs font-mono text-slate-400 flex flex-wrap items-center gap-1.5 sm:gap-2">
                   <span>Offense: <strong className="text-amber-400">{activeCase?.incidentType || "Pending"}</strong></span>
                   <span>•</span>
                   <span>Location: <strong className="text-slate-300">{activeCase?.location || "Unspecified"}</strong></span>
-                  <span>•</span>
-                  <span>Officer: <strong className="text-cyan-400">{activeCase?.assignedOfficer || "Inspector R.K. Jadeja"} ({activeCase?.badgeNumber || "AHM-2024-IO-047"})</strong></span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="hidden sm:inline">Officer: <strong className="text-cyan-400">{activeCase?.assignedOfficer || "Inspector R.K. Jadeja"} ({activeCase?.badgeNumber || "AHM-2024-IO-047"})</strong></span>
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {/* One-click Status Toggle Button */}
                 {activeCase && (
                   <button
@@ -1329,7 +1329,7 @@ FIELD TRANSCRIPT & OBSERVATIONS:
                       activeCase.id,
                       activeCase.status === "completed" ? "pending" : "completed"
                     )}
-                    className={`px-3 py-1.5 font-mono text-xs font-semibold rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                    className={`px-2.5 sm:px-3 py-1.5 font-mono text-[11px] sm:text-xs font-semibold rounded-lg border transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
                       activeCase.status === "completed"
                         ? "bg-slate-900 hover:bg-slate-800 text-amber-300 border-amber-500/40"
                         : "bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-500/50"
@@ -1338,12 +1338,12 @@ FIELD TRANSCRIPT & OBSERVATIONS:
                     {activeCase.status === "completed" ? (
                       <>
                         <Clock className="h-3.5 w-3.5 text-amber-400" />
-                        <span>Reopen as Pending</span>
+                        <span>Reopen</span>
                       </>
                     ) : (
                       <>
                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>Mark Completed This Month</span>
+                        <span>Mark Solved</span>
                       </>
                     )}
                   </button>
@@ -1352,38 +1352,38 @@ FIELD TRANSCRIPT & OBSERVATIONS:
                 <button
                   type="button"
                   onClick={() => setActiveModule("dossier")}
-                  className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-xs font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-2.5 sm:px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[11px] sm:text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer shadow-sm"
                 >
                   <FileSignature className="h-3.5 w-3.5 text-amber-500" />
-                  <span>Edit Field Dossier</span>
+                  <span>Edit Dossier</span>
                 </button>
               </div>
             </div>
 
             {/* Tactical Metric Quick Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800/80 font-mono text-[10.5px]">
-              <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
-                <span className="text-slate-400 uppercase">COURT ADMISSIBILITY:</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 pt-2 border-t border-slate-800/80 font-mono text-[9.5px] sm:text-[10.5px]">
+              <div className="bg-slate-950 p-1.5 sm:p-2 rounded border border-slate-800/80 flex items-center justify-between">
+                <span className="text-slate-400 uppercase">ADMISSIBILITY:</span>
                 <span className="text-emerald-400 font-bold">
                   {activeCase?.analysis?.evidentiaryStrength ? `${activeCase.analysis.evidentiaryStrength}%` : "94% INDEX"}
                 </span>
               </div>
-              <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
+              <div className="bg-slate-950 p-1.5 sm:p-2 rounded border border-slate-800/80 flex items-center justify-between">
                 <span className="text-slate-400 uppercase">MAPPED CHARGES:</span>
                 <span className="text-amber-400 font-bold">
                   {activeCase?.prelimillaryCharges?.length || 2} CODES
                 </span>
               </div>
-              <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
-                <span className="text-slate-400 uppercase">EXHIBITS LOGGED:</span>
+              <div className="bg-slate-950 p-1.5 sm:p-2 rounded border border-slate-800/80 flex items-center justify-between">
+                <span className="text-slate-400 uppercase">EXHIBITS:</span>
                 <span className="text-cyan-400 font-bold">
                   {activeCase?.evidenceList?.length || 3} ITEMS
                 </span>
               </div>
-              <div className="bg-slate-950 p-2 rounded border border-slate-800/80 flex items-center justify-between">
-                <span className="text-slate-400 uppercase">CASE STATUS:</span>
+              <div className="bg-slate-950 p-1.5 sm:p-2 rounded border border-slate-800/80 flex items-center justify-between">
+                <span className="text-slate-400 uppercase">STATUS:</span>
                 <span className={`font-bold uppercase ${activeCase?.status === "completed" ? "text-emerald-400" : "text-amber-400"}`}>
-                  {activeCase?.status === "completed" ? "RESOLVED (AUG 2026)" : "PENDING ACTIVE"}
+                  {activeCase?.status === "completed" ? "SOLVED" : "PENDING"}
                 </span>
               </div>
             </div>
