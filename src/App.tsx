@@ -30,7 +30,8 @@ import {
   Database,
   ArrowRight,
   Clock,
-  FolderOpen
+  FolderOpen,
+  X
 } from "lucide-react";
 
 import { CASE_TEMPLATES, CaseTemplate } from "./components/CaseTemplates";
@@ -133,6 +134,7 @@ FIELD TRANSCRIPT & OBSERVATIONS:
   // Collapsible Template Panels
   const [showTemplatesDossier, setShowTemplatesDossier] = useState(false);
   const [showTemplatesWorkspace, setShowTemplatesWorkspace] = useState(false);
+  const [showMobileCaseVault, setShowMobileCaseVault] = useState(false);
 
   // Success/Notification states
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
@@ -960,8 +962,8 @@ FIELD TRANSCRIPT & OBSERVATIONS:
       {/* MODULE 2: INCIDENT DOSSIER (FIELD DATA ENTRY & INTAKE) */}
       {userProfile && activeModule === "dossier" && (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 bg-slate-950">
-          {/* Left Sidebar: Internal Case History (4 cols) */}
-          <div className="lg:col-span-4 border-r border-slate-900 bg-slate-950 flex flex-col">
+          {/* Left Sidebar: Internal Case History (4 cols) - Desktop only */}
+          <div className="hidden lg:flex lg:col-span-4 border-r border-slate-900 bg-slate-950 flex-col">
             <CaseHistory
               cases={cases}
               activeId={selectedCaseId}
@@ -1008,7 +1010,27 @@ FIELD TRANSCRIPT & OBSERVATIONS:
           </div>
 
           {/* Main 8-column Case Field Dossier Form */}
-          <div className="lg:col-span-8 p-3.5 sm:p-6 flex flex-col space-y-4 sm:space-y-6 bg-slate-950">
+          <div className="col-span-1 lg:col-span-8 p-3.5 sm:p-6 flex flex-col space-y-4 sm:space-y-6 bg-slate-950">
+            {/* Mobile Case Switcher Header (Visible on mobile < lg) */}
+            <div className="lg:hidden bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2 shadow">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 text-[9px] font-mono text-amber-400 font-bold uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>OPEN DOSSIER:</span>
+                </div>
+                <p className="text-xs font-bold text-white truncate">{caseTitle || "Untitled Case"}</p>
+                <p className="text-[10px] text-slate-400 font-mono truncate">{incidentType || "Incident"} • {cases.find(c => c.id === selectedCaseId)?.status === "completed" ? "Solved" : "Pending"}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobileCaseVault(true)}
+                className="px-3 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 shadow-md cursor-pointer shrink-0 transition-all"
+              >
+                <FolderOpen className="h-3.5 w-3.5" />
+                <span>Switch Case ({cases.length})</span>
+              </button>
+            </div>
+
             {/* Header with Quick Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 sm:pb-4 border-b border-slate-900 gap-3">
               <div className="flex items-center gap-2">
@@ -1228,8 +1250,8 @@ FIELD TRANSCRIPT & OBSERVATIONS:
       {userProfile && activeModule === "workspace" && (
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 bg-slate-950">
         
-        {/* Left Sidebar: Internal Case History (4 cols) */}
-        <div className="lg:col-span-4 border-r border-slate-900 bg-slate-950 flex flex-col">
+        {/* Left Sidebar: Internal Case History (4 cols) - Desktop only */}
+        <div className="hidden lg:flex lg:col-span-4 border-r border-slate-900 bg-slate-950 flex-col">
           <CaseHistory
             cases={cases}
             activeId={selectedCaseId}
@@ -1276,8 +1298,28 @@ FIELD TRANSCRIPT & OBSERVATIONS:
         </div>
 
         {/* Dedicated 8-column Intelligence Workspace Output Panel */}
-        <div className="lg:col-span-8 p-3.5 sm:p-6 flex flex-col space-y-4 sm:space-y-6 bg-slate-950">
+        <div className="col-span-1 lg:col-span-8 p-3.5 sm:p-6 flex flex-col space-y-4 sm:space-y-6 bg-slate-950">
           
+          {/* Mobile Case Switcher Header (Visible on mobile < lg) */}
+          <div className="lg:hidden bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2 shadow">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 text-[9px] font-mono text-amber-400 font-bold uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                <span>ACTIVE CASE INTEL:</span>
+              </div>
+              <p className="text-xs font-bold text-white truncate">{activeCase?.title || "Untitled Case"}</p>
+              <p className="text-[10px] text-slate-400 font-mono truncate">{activeCase?.incidentType || "Offense"} • {activeCase?.status === "completed" ? "Solved" : "Pending"}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowMobileCaseVault(true)}
+              className="px-3 py-2 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 shadow-md cursor-pointer shrink-0 transition-all"
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+              <span>Switch Case ({cases.length})</span>
+            </button>
+          </div>
+
           {/* Active Case Tactical HUD Command Banner */}
           <div className="bg-slate-900/90 p-3 sm:p-4 rounded-xl border border-slate-800 space-y-2.5 sm:space-y-3 shadow-lg">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1940,7 +1982,7 @@ FIELD TRANSCRIPT & OBSERVATIONS:
 
           {/* TAB CONTENT: Embedded Legal Advisor Chat AI */}
           {activeOutputTab === "chat" && (
-            <div className="h-[540px] animate-fade-in">
+            <div className="min-h-[480px] h-[65vh] sm:h-[540px] max-h-[720px] animate-fade-in flex flex-col">
               <LegalAdvisorChat
                 messages={chatMessages}
                 onSendMessage={handleSendChatMessage}
@@ -1955,6 +1997,100 @@ FIELD TRANSCRIPT & OBSERVATIONS:
         </div>
 
       </div>
+      )}
+
+      {/* DEDICATED MOBILE CASE VAULT & SWITCHER MODAL */}
+      {showMobileCaseVault && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4 animate-fade-in">
+          <div className="bg-slate-950 border border-amber-500/40 rounded-t-2xl sm:rounded-2xl max-w-2xl w-full mx-auto max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-slate-900 p-3.5 sm:p-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400">
+                  <FolderOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xs sm:text-sm font-bold text-white font-mono uppercase">CASE VAULT &amp; REGISTRY</h2>
+                  <p className="text-[10px] sm:text-[11px] text-slate-400 font-mono">Select any existing case or open a new investigation</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobileCaseVault(false)}
+                className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 tactical-scrollbar min-h-0">
+              <div className="flex items-center justify-between gap-2 pb-1">
+                <span className="text-xs font-mono text-slate-400">Total Cases: <strong className="text-amber-400">{cases.length}</strong></span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleCreateNewCase();
+                    setShowMobileCaseVault(false);
+                  }}
+                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="h-3.5 w-3.5" /> + New Case File
+                </button>
+              </div>
+
+              <CaseHistory
+                cases={cases}
+                activeId={selectedCaseId}
+                onSelect={(id) => {
+                  handleSelectCase(id);
+                  setShowMobileCaseVault(false);
+                  const found = cases.find(c => c.id === id);
+                  showToast(`Switched to case: "${found?.title || id}"`, "success");
+                }}
+                onDelete={handleDeleteCase}
+                onToggleStatus={handleToggleCaseStatus}
+              />
+
+              {/* Preset Case Templates */}
+              <div className="border border-slate-800 bg-slate-900/60 rounded-xl p-3 space-y-2">
+                <span className="text-[10px] font-mono text-amber-500 font-bold uppercase tracking-wider block">
+                  Load Pre-Configured Investigation Template:
+                </span>
+                <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto tactical-scrollbar">
+                  {CASE_TEMPLATES.map((tpl, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        applyTemplate(tpl);
+                        setShowMobileCaseVault(false);
+                      }}
+                      className="w-full text-left bg-slate-950 hover:bg-slate-900 border border-slate-800 p-2.5 rounded-lg text-xs text-slate-200 flex items-center justify-between cursor-pointer group"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="font-semibold text-slate-200 group-hover:text-amber-300 truncate">{tpl.title}</p>
+                        <p className="text-[10px] text-slate-500 font-mono">{tpl.category || "General"} • {tpl.status === "completed" ? "Solved" : "Pending"}</p>
+                      </div>
+                      <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 shrink-0 font-bold">Load</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 bg-slate-900 border-t border-slate-800 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowMobileCaseVault(false)}
+                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-mono font-bold transition-colors cursor-pointer text-center"
+              >
+                ← Return to Open Case File
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* App Footer */}

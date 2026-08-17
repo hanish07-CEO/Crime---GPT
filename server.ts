@@ -36,7 +36,7 @@ async function generateContentWithFallback(options: {
   responseSchema?: any;
   temperature?: number;
 }): Promise<string> {
-  const modelsToTry = ["gemini-3.6-flash"];
+  const modelsToTry = ["gemini-flash-latest", "gemini-2.5-flash"];
   let lastError: any = null;
 
   for (const model of modelsToTry) {
